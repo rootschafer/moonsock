@@ -4,7 +4,7 @@ version = "0.1.2"
 edition = "2021"
 license = "MIT"
 description = "Moonsock is a simple way to connect to a klipper/moonraker 3D printer websocket from anywhere where tokio can be ran and your printer is accessible from the internet."
-repository = "https://github.com/Rottschaferanders/moonsock.git"
+repository = "https://github.com/rootschafer/moonsock.git"
 readme = "README.md"
 
 
@@ -35,7 +35,7 @@ maplit = "1"
 # pin-project = { version = "1.0.8", optional = true }
 # futures = "0.3.30"
 
-# fastwebsockets = {version = "0.7", features = ["upgrade"] } 
+# fastwebsockets = {version = "0.7", features = ["upgrade"] }
 # spinners = "4.1.1"
 spinoff = "0.8"
 thiserror = "1"
