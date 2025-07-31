@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub mod response;
 pub use response::*;
@@ -36,15 +36,9 @@ pub use moonraker_client_new::*;
 
 /// ---------------------- Request Serializing ------------------------
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum JsonRpcVersion {
-    #[serde(rename = "2.0")]
-    V2
+	#[serde(rename = "2.0")]
+	#[default]
+	V2,
 }
-
-impl Default for JsonRpcVersion {
-    fn default() -> Self {
-        JsonRpcVersion::V2
-    }
-}
-

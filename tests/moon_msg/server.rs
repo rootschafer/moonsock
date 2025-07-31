@@ -1,47 +1,47 @@
 use moonsock::{
-    // MoonMSG, 
-    MoonRequest,
-    MoonMethod, 
-    // MoonParam
+	MoonMethod,
+	// MoonParam
+	// MoonMSG,
+	MoonRequest,
 };
 
 #[test]
 fn test_server_info() {
-    let json = r#"{
+	let json = r#"{
         "jsonrpc": "2.0",
         "method": "server.info",
         "id": 9546
     }"#;
 
-    // let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
-    let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
-    // match moon_msg.method().unwrap() {
-    match moon_msg.method {
-        MoonMethod::ServerInfo => assert!(true),
-        _ => panic!("Expected MoonMethod::ServerInfo"),
-    }
+	// let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
+	let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
+	// match moon_msg.method().unwrap() {
+	match moon_msg.method {
+		MoonMethod::ServerInfo => {}
+		_ => panic!("Expected MoonMethod::ServerInfo"),
+	}
 }
 
 #[test]
 fn test_server_config() {
-    let json = r#"{
+	let json = r#"{
         "jsonrpc": "2.0",
         "method": "server.config",
         "id": 5616
     }"#;
 
-    // let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
-    let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
-    // match moon_msg.method().unwrap() {
-    match moon_msg.method {
-        MoonMethod::ServerConfig => assert!(true),
-        _ => panic!("Expected MoonMethod::ServerConfig"),
-    }
+	// let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
+	let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
+	// match moon_msg.method().unwrap() {
+	match moon_msg.method {
+		MoonMethod::ServerConfig => {}
+		_ => panic!("Expected MoonMethod::ServerConfig"),
+	}
 }
 
 #[test]
 fn test_server_temperature_store() {
-    let json = r#"{
+	let json = r#"{
         "jsonrpc": "2.0",
         "method": "server.temperature_store",
         "params": {
@@ -50,39 +50,36 @@ fn test_server_temperature_store() {
         "id": 2313
     }"#;
 
-    // let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
-    let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
-    // match moon_msg.method().unwrap() {
-    match moon_msg.method {
-        MoonMethod::ServerTemperatureStore => assert!(true),
-        _ => panic!("Expected MoonMethod::ServerTemperatureStore"),
-    }
+	// let moon_msg: MoonMSG = serde_json::from_str(json).unwrap();
+	let moon_msg: MoonRequest = serde_json::from_str(json).unwrap();
+	// match moon_msg.method().unwrap() {
+	match moon_msg.method {
+		MoonMethod::ServerTemperatureStore => {}
+		_ => panic!("Expected MoonMethod::ServerTemperatureStore"),
+	}
 }
 
 
 #[test]
 fn test_serialize_server_info() {
-    // let moon_msg = MoonMSG::new(
-    //     MoonMethod::ServerInfo,
-    //     None,
-    //     Some(9546),
-    // );
-    // let moon_msg = MoonRequest::new(
-    //     MoonMethod::ServerInfo,
-    //     None,
-    // );
-    let moon_msg = MoonRequest {
-        jsonrpc: moonsock::JsonRpcVersion::V2,
-        method: MoonMethod::ServerInfo,
-        params: None,
-        id: 9546,
-    };
+	// let moon_msg = MoonMSG::new(
+	//     MoonMethod::ServerInfo,
+	//     None,
+	//     Some(9546),
+	// );
+	// let moon_msg = MoonRequest::new(
+	//     MoonMethod::ServerInfo,
+	//     None,
+	// );
+	let moon_msg = MoonRequest {
+		jsonrpc: moonsock::JsonRpcVersion::V2,
+		method: MoonMethod::ServerInfo,
+		params: None,
+		id: 9546,
+	};
 
-    let json = serde_json::to_string(&moon_msg).unwrap();
-    assert_eq!(
-        json,
-        r#"{"jsonrpc":"2.0","method":"server.info","id":9546}"#
-    );
+	let json = serde_json::to_string(&moon_msg).unwrap();
+	assert_eq!(json, r#"{"jsonrpc":"2.0","method":"server.info","id":9546}"#);
 }
 
 // #[test]
@@ -149,3 +146,4 @@ fn test_serialize_server_info() {
 //     }
 //     assert_eq!(moon_msg.id, 2313);
 // }
+
