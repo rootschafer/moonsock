@@ -99,6 +99,9 @@ pub enum MoonMethod {
     ServerFilesMove,
     #[serde(rename="server.files.copy")]
     ServerFilesCopy,
+    /// Creates a zip archive from items
+    #[serde(rename="server.files.zip")]
+    ServerFilesZip,
     #[serde(rename="server.files.delete_file")]
     ServerFilesDeleteFile,
     #[serde(rename="server.database.list")]
@@ -113,8 +116,15 @@ pub enum MoonMethod {
     ServerJobQueueStatus,
     #[serde(rename="server.job_queue.post_job")]
     ServerJobQueuePostJob,
+    /// Remove a job from the queue (legacy or alt spelling)
+    #[serde(rename="server.job_queue.remove_job")]
+    ServerJobQueueRemoveJob,
+    /// Delete a job from the queue (alt spelling)
     #[serde(rename="server.job_queue.delete_job")]
     ServerJobQueueDeleteJob,
+    /// Clear the job queue
+    #[serde(rename="server.job_queue.clear")]
+    ServerJobQueueClear,
     #[serde(rename="server.job_queue.pause")]
     ServerJobQueuePause,
     #[serde(rename="server.job_queue.start")]

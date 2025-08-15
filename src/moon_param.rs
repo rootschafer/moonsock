@@ -43,6 +43,25 @@ pub enum MoonParam {
     GcodeScript {
         script: String,
     },
+    // Files
+    ServerFilesPath {
+        path: String,
+    },
+    ServerFilesMoveParams {
+        source: String,
+        dest: String,
+    },
+    ServerFilesZipParams {
+        items: Vec<String>,
+        dest: String,
+    },
+    // Job Queue
+    ServerJobQueuePostJobParams {
+        filename: String,
+    },
+    ServerJobQueueDeleteJobParams {
+        job_id: String,
+    },
     Count(u64),
     Filename(String),
     Service(SystemdSevice),

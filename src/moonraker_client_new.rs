@@ -139,6 +139,12 @@ impl MoonrakerClient {
 		}
 	}
 
+    /// Listens for a JSON-RPC notification from Moonraker.
+    /// Returns None if the underlying channel is closed.
+    pub async fn listen_for_notification(&mut self) -> Option<crate::jsonrpc_ws_client::JsonRpcNotification> {
+        self.connection.listen_for_notification().await
+    }
+
 	pub async fn create_user(
 		&mut self,
 		username: impl Into<String>,

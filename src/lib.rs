@@ -25,6 +25,7 @@ pub use moon_param::*;
 // pub use fast_ws_connection::*;
 
 pub mod jsonrpc_ws_client;
+pub use jsonrpc_ws_client::JsonRpcNotification;
 
 // mod moonraker_client;
 // pub use moonraker_client::MoonrakerClient;
