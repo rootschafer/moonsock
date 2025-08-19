@@ -55,16 +55,38 @@ pub enum MoonResponse {
 impl From<JsonRpcResponse> for MoonResponse {
 	fn from(response: JsonRpcResponse) -> Self {
 		match response {
-			JsonRpcResponse::Result(result) => MoonResponse::MoonResult {
-				jsonrpc: JsonRpcVersion::V2,
-				result: serde_json::from_value(result.result).unwrap(),
-				id: 0,
+			// JsonRpcResponse::Result(result) => MoonResponse::MoonResult {
+			// 	jsonrpc: JsonRpcVersion::V2,
+			// 	result: serde_json::from_value(result.result).unwrap(),
+			// 	id: 0,
+			// },
+			JsonRpcResponse::Result(result) => match serde_json::from_value::<MoonResultData>(result.result) {
+				Ok(moon_result) => MoonResponse::MoonResult {
+					jsonrpc: JsonRpcVersion::V2,
+					result: moon_result,
+					// id: 0,
+					id: result.id,
+				},
+				Err(e) => {
+					tracing::error!("Error parsing MoonResultData: {}", e);
+					MoonResponse::MoonError {
+						jsonrpc: JsonRpcVersion::V2,
+						error: JsonRpcError {
+							code: 0,
+							message: "Failed to parse MoonResultData".to_string(),
+							data: None,
+						},
+						// id: None,
+						id: Some(result.id),
+					}
+				},
 			},
 			JsonRpcResponse::ReturnedError(error) => MoonResponse::MoonError {
 				jsonrpc: JsonRpcVersion::V2,
 				// error: serde_json::from_value(error).unwrap(),
 				error,
 				id: None,
+				// id: Some(error.id),
 			},
 		}
 	}

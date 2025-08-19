@@ -36,7 +36,7 @@ const DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT: Duration = Duration::from_secs(30)
 
 /// Represents a JSON-RPC version.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-enum JsonRpcVersion {
+pub enum JsonRpcVersion {
 	/// Version 2.0
 	#[serde(rename = "2.0")]
 	V2,
@@ -46,7 +46,7 @@ enum JsonRpcVersion {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct JsonRpcRequest {
 	/// The JSON-RPC version of the request.
-	jsonrpc: JsonRpcVersion,
+	pub jsonrpc: JsonRpcVersion,
 	/// The method to be called.
 	pub method: serde_json::Value,
 	/// The parameters to be passed to the method.
@@ -118,29 +118,29 @@ impl std::fmt::Display for JsonRpcError {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct JsonRpcErrorResponse {
 	/// The JSON-RPC version of the response.
-	jsonrpc: JsonRpcVersion,
+	pub jsonrpc: JsonRpcVersion,
 	/// The error.
 	pub error: JsonRpcError,
 	/// The ID of the request.
-	id: Option<u32>,
+	pub id: Option<u32>,
 }
 
 /// A JSON-RPC success response.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct JsonRpcSuccessResponse {
 	/// The JSON-RPC version of the response.
-	jsonrpc: JsonRpcVersion,
+	pub jsonrpc: JsonRpcVersion,
 	/// The result of the method call.
 	pub result: serde_json::Value,
 	/// The ID of the request.
-	id: u32,
+	pub id: u32,
 }
 
 /// A JSON-RPC 2.0 notification.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct JsonRpcNotification {
 	/// The JSON-RPC version of the notification.
-	jsonrpc: JsonRpcVersion,
+	pub jsonrpc: JsonRpcVersion,
 	/// The method of the notification.
 	pub method: String,
 	/// The parameters of the notification.

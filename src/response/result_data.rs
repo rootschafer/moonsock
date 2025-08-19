@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::response::{
 	ConnectionIdResponse, EndstopStatus, GcodeHelp, GcodeStore, MachineProcStats, PrinterInfoResponse,
 	PrinterObjectsListResponse, PrinterObjectsQueryResponse, RollOverResponse, ServerConfig, ServerInfo, SystemInfo,
-	TemperatureStore, WebsocketIdResponse,
+	TemperatureStore, WebsocketIdResponse, ServerFilesListResponse, ServerAnnouncementsResponse, ServerJobQueueStatusResponse, ServerWebcamsListResponse, ServerHistoryListResponse,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -38,6 +38,11 @@ pub enum MoonResultData {
 	},
 	MachineProcStats(MachineProcStats),
 	AuthenticationResponse(AuthenticationResponse),
+	ServerFilesListResponse(ServerFilesListResponse),
+	ServerAnnouncementsResponse(ServerAnnouncementsResponse),
+	ServerJobQueueStatusResponse(ServerJobQueueStatusResponse),
+	ServerWebcamsListResponse(ServerWebcamsListResponse),
+	ServerHistoryListResponse(ServerHistoryListResponse),
 	#[default]
 	None,
 }
