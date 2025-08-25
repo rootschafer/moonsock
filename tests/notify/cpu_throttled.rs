@@ -3,7 +3,6 @@ use moonsock::{
 	// CpuThrottledState
 	response::CpuThrottledState,
 	JsonRpcVersion,
-	MoonResponse,
 	NotificationMethod,
 	NotificationParam,
 };

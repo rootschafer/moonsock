@@ -346,10 +346,6 @@ impl MoonrakerClient {
 				}
 			},
 			MoonResponse::MoonError { error, .. } => Err(error.into()),
-			_ => {
-				tracing::error!("Error in `MoonrakerClient::get_printer_info`: did not receive a MoonMSG::MoonResult response, but should have. This is a bug.");
-				Err("Error in `MoonrakerClient::get_printer_info`: did not receive a MoonMSG::MoonResult response, but should have. This is a bug.".into())
-			}
 		}
 	}
 

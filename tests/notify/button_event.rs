@@ -4,7 +4,6 @@ use moonsock::{
 	ButtonEventParam,
 	// ButtonEventParams,
 	JsonRpcVersion,
-	MoonResponse,
 	NotificationMethod,
 	NotificationParam,
 };
@@ -239,23 +238,19 @@ fn test_deserialize_button_event() {
 	let json = r#"{"jsonrpc":"2.0","method":"notify_button_event","params":[{"name":"my_button","type":"gpio","event":{"elapsed_time":0.09323832602240145,"received_time":698614.214597004,"render_time":698614.214728513,"pressed":false},"aux":null}]}"#;
 	let deserialized: MoonNotification = serde_json::from_str(json).unwrap();
 
-	if let MoonNotification { jsonrpc, method, params } = deserialized {
-		assert_eq!(jsonrpc, JsonRpcVersion::V2);
-		assert_eq!(method, NotificationMethod::NotifyButtonEvent);
-		if let Some(NotificationParam::ButtonEvent(param)) = params {
-			assert_eq!(param.name, "my_button");
-			assert_eq!(param.button_type, "gpio");
-			// assert_eq!(param.event.elapsed_time, 0.09323832602240145);
-			assert!((param.event.elapsed_time - 0.09323832602240145).abs() < 1e-10);
-			assert_eq!(param.event.received_time, 698614.214597004);
-			assert_eq!(param.event.render_time, 698614.214728513);
-			assert!(!param.event.pressed);
-			assert!(param.aux.is_none());
-		} else {
-			panic!("Invalid params");
-		}
+	let MoonNotification { jsonrpc, method, params } = deserialized;
+	assert_eq!(jsonrpc, JsonRpcVersion::V2);
+	assert_eq!(method, NotificationMethod::NotifyButtonEvent);
+	if let Some(NotificationParam::ButtonEvent(param)) = params {
+		assert_eq!(param.name, "my_button");
+		assert_eq!(param.button_type, "gpio");
+		// assert_eq!(param.event.elapsed_time, 0.09323832602240145);
+		assert!((param.event.elapsed_time - 0.09323832602240145).abs() < 1e-10);
+		assert_eq!(param.event.received_time, 698614.214597004);
+		assert_eq!(param.event.render_time, 698614.214728513);
+		assert!(!param.event.pressed);
+		assert!(param.aux.is_none());
 	} else {
-		panic!("Invalid MoonResponse");
+		panic!("Invalid params");
 	}
 }
-

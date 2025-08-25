@@ -5,7 +5,6 @@ use moonsock::{
 	CommitInfo,
 	GitRepoInfo,
 	JsonRpcVersion,
-	MoonResponse,
 	NotificationMethod,
 	NotificationParam,
 	// response::SystemInfo,

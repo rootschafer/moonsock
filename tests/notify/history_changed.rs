@@ -1,5 +1,5 @@
 use moonsock::{
-	HistoryChangedParam, JobObject, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod,
+	HistoryChangedParam, JobObject, JsonRpcVersion, MoonNotification, NotificationMethod,
 	NotificationParam,
 };
 

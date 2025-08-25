@@ -1,5 +1,5 @@
 use moonsock::{
-	JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams,
+	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams,
 };
 
 

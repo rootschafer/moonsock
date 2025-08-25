@@ -1,5 +1,5 @@
 use moonsock::{
-	JobQueueAction, JobQueueChangedParam, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod,
+	JobQueueAction, JobQueueChangedParam, JsonRpcVersion, MoonNotification, NotificationMethod,
 	NotificationParam,
 };
 

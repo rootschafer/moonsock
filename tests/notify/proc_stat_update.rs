@@ -1,4 +1,4 @@
-use moonsock::{MoonNotification, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{MoonNotification, NotificationMethod, NotificationParam};
 
 #[test]
 fn notify_proc_stat_update() {

@@ -1,6 +1,6 @@
 use moonsock::{
 	response::{GcodeMove, PrinterObjectStatus, Toolhead},
-	JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam,
+	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
 };
 
 #[test]

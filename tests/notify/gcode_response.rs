@@ -1,4 +1,4 @@
-use moonsock::{MoonNotification, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{MoonNotification, NotificationMethod, NotificationParam};
 use serde_json::json;
 
 #[test]
@@ -49,21 +49,17 @@ fn notify_gcode_response() {
 	let meg_string = serde_json::to_string(&msg).unwrap();
 	println!("{meg_string}");
 
-	match msg {
-		MoonNotification { params, .. } => {
-			println!("Params: {params:?}");
-			match params.unwrap().clone() {
-				NotificationParam::String(message) => {
-					assert_eq!(
-						message,
-						vec!["!! Must home axis first: 160.200 210.000 50.022 [7013.719]".to_string()]
-					);
-				}
-				_ => {
-					panic!("Wrong message type");
-				}
-			}
+	let MoonNotification { params, .. } = msg;
+	println!("Params: {params:?}");
+	match params.unwrap().clone() {
+		NotificationParam::String(message) => {
+			assert_eq!(
+				message,
+				vec!["!! Must home axis first: 160.200 210.000 50.022 [7013.719]".to_string()]
+			);
 		}
-		_ => panic!("Should have gotten a MoonNotification"),
+		_ => {
+			panic!("Wrong message type");
+		}
 	}
 }

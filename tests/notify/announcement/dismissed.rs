@@ -1,4 +1,4 @@
-use moonsock::{EntryId, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{EntryId, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam};
 
 #[test]
 fn test_serialize_notify_announcement_dismissed() {

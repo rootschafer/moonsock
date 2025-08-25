@@ -44,7 +44,7 @@ pub struct FilelistItem {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::{JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam};
+	use crate::{MoonNotification, NotificationMethod, NotificationParam};
 	#[test]
 	fn test_parse_notify_filelist_changed() {
 		let json = r#"{

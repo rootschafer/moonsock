@@ -1,5 +1,5 @@
 use moonsock::{
-	response::ServiceState, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam,
+	response::ServiceState, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
 	ServiceStateChangedParam,
 };
 

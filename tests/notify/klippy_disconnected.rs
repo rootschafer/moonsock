@@ -1,4 +1,4 @@
-use moonsock::{JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod};
 
 #[test]
 fn test_deserialize_notify_klippy_disconnected() {

@@ -1,5 +1,5 @@
 use moonsock::{
-	ActiveSpoolSetParams, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam,
+	ActiveSpoolSetParams, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
 };
 
 #[test]

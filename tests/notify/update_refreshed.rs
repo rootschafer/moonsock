@@ -1,6 +1,6 @@
 // use std::collections::HashMap;
 use moonsock::{
-	ApplicationInfo, CommitInfo, GitRepoInfo, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod,
+	ApplicationInfo, CommitInfo, GitRepoInfo, JsonRpcVersion, MoonNotification, NotificationMethod,
 	NotificationParam, SystemPkgInfo, UpdateRefreshedParam, VersionInfo, WebInfo,
 };
 use maplit::hashmap;

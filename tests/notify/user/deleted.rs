@@ -1,4 +1,4 @@
-use moonsock::{JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam, UserParam};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, UserParam};
 
 #[test]
 fn test_deserialize_notify_user_deleted() {
