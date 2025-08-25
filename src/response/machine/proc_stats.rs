@@ -221,7 +221,6 @@ mod tests {
 					_ => panic!("Expected MachineProcStats"),
 				}
 			}
-			// _ => assert!(false),
 			_ => panic!("Expected MoonResult"),
 		}
 	}
@@ -298,4 +297,3 @@ mod tests {
 		assert_eq!(json, expected_json);
 	}
 }
-

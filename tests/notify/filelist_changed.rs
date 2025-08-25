@@ -28,7 +28,7 @@
 //         ]
 //     }"#;
 
-//     let expected = MoonResponse::Notification {
+//     let expected = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyFilelistChanged,
 //         params: Some(

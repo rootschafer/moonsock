@@ -1,9 +1,11 @@
-use moonsock::{JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams};
+use moonsock::{
+	JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams,
+};
 
 
 #[test]
 fn test_serialize_notify_webcams_changed() {
-	let message = MoonResponse::Notification {
+	let message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyWebcamsChanged,
 		params: Some(NotificationParam::WebcamsChanged(WebcamsChangedParams {
@@ -55,7 +57,7 @@ fn test_serialize_notify_webcams_changed() {
 #[test]
 fn test_deserialize_notify_webcams_changed() {
 	let json = r#"{"jsonrpc":"2.0","method":"notify_webcams_changed","params":[{"webcams":[{"name":"tc2","location":"printer","service":"mjpegstreamer","enabled":true,"icon":"mdiWebcam","target_fps":15,"target_fps_idle":5,"stream_url":"http://printer.lan/webcam?action=stream","snapshot_url":"http://printer.lan/webcam?action=snapshot","flip_horizontal":false,"flip_vertical":false,"rotation":0,"aspect_ratio":"4:3","extra_data":{},"source":"database"},{"name":"TestCam","location":"printer","service":"mjpegstreamer","enabled":true,"icon":"mdiWebcam","target_fps":15,"target_fps_idle":5,"stream_url":"/webcam/?action=stream","snapshot_url":"/webcam/?action=snapshot","flip_horizontal":false,"flip_vertical":false,"rotation":0,"aspect_ratio":"4:3","extra_data":{},"source":"database"}]}]}"#;
-	let expected_message = MoonResponse::Notification {
+	let expected_message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyWebcamsChanged,
 		params: Some(NotificationParam::WebcamsChanged(WebcamsChangedParams {
@@ -98,8 +100,7 @@ fn test_deserialize_notify_webcams_changed() {
 		})),
 	};
 
-	let actual_message: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual: MoonNotification = serde_json::from_str(json).unwrap();
 
-	assert_eq!(expected_message, actual_message);
+	assert_eq!(expected_message, actual);
 }
-

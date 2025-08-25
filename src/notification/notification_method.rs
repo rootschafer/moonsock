@@ -3,38 +3,28 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-	// },
-	// MachineProcStats,
-	// utils::deserialize_single_item_array,
-	// utils::serde_button_event,
-	// utils::button_event_param_serde,
-	utils::single_element_array,
-	// response::{
-	ActiveSpoolSetParams,
-	// AnnouncementParams,
-	AnnouncementUpdateParam,
-	// MoonrakerStats,
-	CpuThrottledState,
-	EntryId,
-	FilelistChangedParam,
-	HistoryChangedParam,
-	JsonRpcNotification,
-	// Network,
-	// AnnouncementEntryId,
-	// AnnouncementDismissedParam, AnnouncementWakeParam,
-	NotifyProcStatUpdateParam,
-	PrinterObjectStatus,
-	ServiceState,
-	SpoolmanStatusChangedParams,
-	WebcamsChangedParams,
+	utils::single_element_array, ActiveSpoolSetParams, AnnouncementUpdateParam, CpuThrottledState, EntryId,
+	FilelistChangedParam, HistoryChangedParam, JsonRpcNotification, JsonRpcVersion, NotifyProcStatUpdateParam,
+	PrinterObjectStatus, ServiceState, SpoolmanStatusChangedParams, WebcamsChangedParams,
 };
 
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MoonNotification {
+	pub jsonrpc: JsonRpcVersion,
 	pub method: NotificationMethod,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub params: Option<NotificationParam>,
+}
+
+impl Default for MoonNotification {
+	fn default() -> Self {
+		Self {
+			jsonrpc: JsonRpcVersion::V2,
+			method: NotificationMethod::Other("not_a_real_notification_method".to_string()),
+			params: None,
+		}
+	}
 }
 
 impl TryFrom<JsonRpcNotification> for MoonNotification {
@@ -45,10 +35,10 @@ impl TryFrom<JsonRpcNotification> for MoonNotification {
 		match serde_json::from_str(&method_json) {
 			Ok(method) => match value.params {
 				Some(params) => match serde_json::from_value(params) {
-					Ok(params) => Ok(MoonNotification { method, params: Some(params) }),
+					Ok(params) => Ok(MoonNotification { method, params: Some(params), ..Default::default() }),
 					Err(e) => Err(format!("Error parsing notification params: {}", e).into()),
 				},
-				None => Ok(MoonNotification { method, params: None }),
+				None => Ok(MoonNotification { method, ..Default::default() }),
 			},
 			Err(e) => Err(format!("Error parsing notification method: {}", e).into()),
 		}
@@ -107,6 +97,7 @@ pub enum NotificationMethod {
 	NotifySpoolmanStatusChanged,
 	#[serde(rename = "notify_agent_event")]
 	NotifyAgentEvent,
+	Other(String),
 }
 
 
@@ -290,7 +281,6 @@ pub struct WebInfo {
 pub struct CommitInfo {
 	pub sha: String,
 	pub author: String,
-	// pub date: u64,
 	pub date: String,
 	pub subject: String,
 	pub message: String,
@@ -302,12 +292,6 @@ pub struct CommitInfo {
 pub struct UserParam {
 	pub username: String,
 }
-
-// #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-// pub struct ServiceState {
-//     pub active_state: String,
-//     pub sub_state: String,
-// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ServiceStateChangedParam {

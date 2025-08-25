@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	println!("Connected to moonraker");
 
 	let msg = MoonRequest::new(MoonMethod::PrinterObjectsList, None);
-	let response = connection.send_with_response(msg).await.unwrap();
+	let response = connection.send_with_response(msg, None).await.unwrap();
 
 	match response {
 		MoonResponse::MoonResult { result, .. } => match result {

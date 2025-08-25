@@ -7,7 +7,6 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-// use url::Url;
 use tokio::{
 	sync::{
 		mpsc::{self, error::SendError},
@@ -17,10 +16,7 @@ use tokio::{
 };
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use futures_util::{SinkExt, StreamExt};
-use tungstenite::{
-	client::IntoClientRequest,
-	// http::{Method, Request},
-};
+use tungstenite::client::IntoClientRequest;
 
 /// The default buffer size for the WebSocket writer.
 pub const DEFAULT_WRITER_BUFFER_SIZE: usize = 1000;
@@ -34,10 +30,9 @@ const DEFAULT_SEND_LISTEN_TIMEOUT: Duration = Duration::from_secs(60);
 const DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
 
 
-/// Represents a JSON-RPC version.
+/// The JSON-RPC version. Only version 2.0 is supported.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum JsonRpcVersion {
-	/// Version 2.0
 	#[serde(rename = "2.0")]
 	V2,
 }
@@ -89,9 +84,10 @@ impl JsonRpcRequest {
 #[derive(Debug, Clone)]
 pub enum JsonRpcResponse {
 	/// A successful response.
-	Result(JsonRpcSuccessResponse),
+	Ok(JsonRpcSuccessResponse),
 	/// An error response.
-	ReturnedError(JsonRpcError),
+	// Error(JsonRpcError),
+	Error(JsonRpcErrorResponse),
 }
 
 /// A JSON-RPC error.
@@ -104,6 +100,7 @@ pub struct JsonRpcError {
 	/// Additional error data.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub data: Option<serde_json::Value>,
+	// id: Option<u32>,
 }
 
 impl std::fmt::Display for JsonRpcError {
@@ -190,7 +187,8 @@ enum PendingRequestStatus {
 	/// The request is dirty.
 	Dirty {
 		timeout: Instant,
-		error_message: JsonRpcError,
+		// error_message: JsonRpcError,
+		error_message: JsonRpcErrorResponse,
 	},
 }
 
@@ -206,14 +204,8 @@ pub struct JsonRpcWsClient {
 	/// A counter for generating unique IDs for messages.
 	id_counter: AtomicUsize,
 	/// A map of pending requests, where the key is the message ID and the value is a sender for sending the response.
-	// pending_requests: Arc<Mutex<HashMap<u32, (oneshot::Sender<JsonRpcResponse>, PendingRequestStatus)>>>,
 	pending_requests: PendingRequests,
-	// notification_reader: mpsc::Receiver<serde_json::Value>,
 	notification_reader: mpsc::Receiver<JsonRpcNotification>,
-	// /// The timeout for sending a message and listening for a response.
-	// send_listen_timeout: Duration,
-	// /// The timeout for dirty pending requests.
-	// dirty_pending_response_timeout: Duration,
 }
 
 impl Drop for JsonRpcWsClient {
@@ -243,7 +235,6 @@ impl JsonRpcWsClient {
 		writer_buffer_size: Option<usize>,
 		reader_buffer_size: Option<usize>,
 	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-		// pub async fn new(url: String, writer_buffer_size: Option<usize>, reader_buffer_size: Option<usize>) -> Result<Self, Box<dyn std::error::Error>> {
 		let writer_buffer_size = writer_buffer_size.unwrap_or(DEFAULT_WRITER_BUFFER_SIZE);
 		let reader_buffer_size = reader_buffer_size.unwrap_or(DEFAULT_READER_BUFFER_SIZE);
 
@@ -322,9 +313,9 @@ impl JsonRpcWsClient {
 												tracing::debug!("Response: {}", message_txt);
 												let id = message.id;
 												if let Some((tx, _)) = pending_requests_clone.lock().await.remove(&id) {
-													tx.send(JsonRpcResponse::Result(message)).ok();
+													tx.send(JsonRpcResponse::Ok(message)).ok();
 												} else {
-													ws_reader_sender.send(JsonRpcResponse::Result(message)).await.ok();
+													ws_reader_sender.send(JsonRpcResponse::Ok(message)).await.ok();
 												}
 											},
 											Err(_) => {
@@ -335,9 +326,11 @@ impl JsonRpcWsClient {
 														match message.id {
 															Some(id) => {
 																if let Some((tx, _)) = pending_requests_clone.lock().await.remove(&id) {
-																	tx.send(JsonRpcResponse::ReturnedError(message.error.clone())).ok();
+																	// tx.send(JsonRpcResponse::Error(message.error.clone())).ok();
+																	tx.send(JsonRpcResponse::Error(message.clone())).ok();
 																} else {
-																	ws_reader_sender.send(JsonRpcResponse::ReturnedError(message.error.clone())).await.ok();
+																	// ws_reader_sender.send(JsonRpcResponse::Error(message.error.clone())).await.ok();
+																	ws_reader_sender.send(JsonRpcResponse::Error(message.clone())).await.ok();
 																}
 															},
 															None => {
@@ -346,16 +339,17 @@ impl JsonRpcWsClient {
 																if pending_requests_lock.len() == 1 {
 																	// If there is only one pending request, send the error through the oneshot channel
 																	let (_, (tx, _)) = pending_requests_lock.drain().next().unwrap();
-																	tx.send(JsonRpcResponse::ReturnedError(message.error.clone())).ok();
+																	// tx.send(JsonRpcResponse::Error(message.error.clone())).ok();
+																	tx.send(JsonRpcResponse::Error(message.clone())).ok();
 																} else {
 																	let now = Instant::now();
 																	for (id, (_, status)) in pending_requests_lock.iter_mut() {
 																		if *status == PendingRequestStatus::Clean {
 																			*status = PendingRequestStatus::Dirty {
 																				timeout: now + DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT,
-																				error_message: message.error.clone(),
+																				// error_message: message.error.clone(),
+																				error_message: message.clone(),
 																			};
-																			// dirty_pending_requests.entry(now + DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT).or_insert(Vec::new()).push(*id);
 																			dirty_pending_requests.entry(now + DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT).or_default().push(*id);
 																		}
 																	}
@@ -375,73 +369,6 @@ impl JsonRpcWsClient {
 										}
 									},
 								}
-								// let raw_value: serde_json::Value = serde_json::from_str(&message_txt).unwrap();
-								// if let Some(_id) = raw_value.get("id") {
-								//     // Handle response
-								//     let parsed: Result<JsonRpcSuccessResponse, serde_json::Error> = serde_json::from_str(&message_txt);
-								//     match parsed {
-								//         Ok(message) => {
-								//             tracing::debug!("Response: {}", message_txt);
-								//             let id = message.id;
-								//             if let Some((tx, _)) = pending_requests_clone.lock().await.remove(&id) {
-								//                 tx.send(JsonRpcResponse::Result(message)).ok();
-								//             } else {
-								//                 ws_reader_sender.send(JsonRpcResponse::Result(message)).await.ok();
-								//             }
-								//         },
-								//         Err(_) => {
-								//             let parsed: Result<JsonRpcErrorResponse, serde_json::Error> = serde_json::from_str(&message_txt);
-								//             match parsed {
-								//                 Ok(message) => {
-								//                     tracing::error!("Error: {}", message_txt);
-								//                     match message.id {
-								//                         Some(id) => {
-								//                             if let Some((tx, _)) = pending_requests_clone.lock().await.remove(&id) {
-								//                                 tx.send(JsonRpcResponse::ReturnedError(message.error.clone())).ok();
-								//                             } else {
-								//                                 ws_reader_sender.send(JsonRpcResponse::ReturnedError(message.error.clone())).await.ok();
-								//                             }
-								//                         },
-								//                         None => {
-								//                             // Handle error with null id
-								//                             let mut pending_requests_lock = pending_requests_clone.lock().await;
-								//                             if pending_requests_lock.len() == 1 {
-								//                                 // If there is only one pending request, send the error through the oneshot channel
-								//                                 let (_, (tx, _)) = pending_requests_lock.drain().next().unwrap();
-								//                                 tx.send(JsonRpcResponse::ReturnedError(message.error.clone())).ok();
-								//                             } else {
-								//                                 let now = Instant::now();
-								//                                 for (id, (_, status)) in pending_requests_lock.iter_mut() {
-								//                                     if *status == PendingRequestStatus::Clean {
-								//                                         *status = PendingRequestStatus::Dirty {
-								//                                             timeout: now + DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT,
-								//                                             error_message: message.error.clone(),
-								//                                         };
-								//                                         dirty_pending_requests.entry(now + DEFAULT_DIRTY_PENDING_RESPONSE_TIMEOUT).or_insert(Vec::new()).push(*id);
-								//                                     }
-								//                                 }
-								//                                 has_dirty_requests = true;
-								//                             }
-								//                         },
-								//                     }
-								//                 },
-								//                 Err(_) => {
-								//                     tracing::error!("----------------------------MESSAGE NOT PARSED----------------------------");
-								//                     tracing::error!("Message Length: {}", message_txt.len());
-								//                     tracing::error!("{}", message_txt);
-								//                     tracing::error!("--------------------------------------------------------------------------");
-								//                 },
-								//             }
-								//         },
-								//     }
-								// } else {
-								//     // Handle notification
-								//     tracing::trace!("Received Notification: \n{}", message_txt);
-								//     // notification_sender.send(raw_value).await.ok();
-
-								//     let notification: JsonRpcNotification = serde_json::from_value(raw_value)?;
-								//     notification_sender.send(notification).await.ok();
-								// }
 							},
 							Err(e) => tracing::error!("Error message from moonraker socket: {}", e.to_string()),
 						}
@@ -474,25 +401,12 @@ impl JsonRpcWsClient {
 								}
 								let count = valid_ids.len();
 								for id in valid_ids {
-									// if let Some((tx, status)) = pending_requests_clone.lock().await.remove(&id) {
-									// 	if let PendingRequestStatus::Dirty { error_message, .. } = status {
-									// 		let mut error_message = error_message.clone();
-									// 		if count > 1 {
-									// 			error_message.message = format!("Error: This error may not be associated with this request and may have originated from another. One of your requests had an id that the websocket server could not parse. There is probably something wrong with thewebsocket server is parsing ids.\n{}", error_message.message);
-									// 		}
-									// 		tx.send(JsonRpcResponse::ReturnedError(error_message)).ok();
-									// 	}
-									// }
-
-									// if let Some((tx, status)) = pending_requests_clone.lock().await.remove(&id) {
-									if let Some((tx, PendingRequestStatus::Dirty { error_message, .. })) = pending_requests_clone.lock().await.remove(&id) {
-										// if let PendingRequestStatus::Dirty { error_message, .. } = status {
-											let mut error_message = error_message.clone();
-											if count > 1 {
-												error_message.message = format!("Error: This error may not be associated with this request and may have originated from another. One of your requests had an id that the websocket server could not parse. There is probably something wrong with thewebsocket server is parsing ids.\n{}", error_message.message);
-											}
-											tx.send(JsonRpcResponse::ReturnedError(error_message)).ok();
-										// }
+									if let Some((tx, PendingRequestStatus::Dirty { mut error_message, .. })) = pending_requests_clone.lock().await.remove(&id) {
+										if count > 1 {
+											// error_message.message = format!("Error: This error may not be associated with this request and may have originated from another. One of your requests had an id that the websocket server could not parse. There is probably something wrong with the way the websocket server is parsing ids.\n{}", error_message.message);
+											error_message.error.message = format!("Error: This error may not be associated with this request and may have originated from another. One of your requests had an id that the websocket server could not parse. There is probably something wrong with the way the websocket server is parsing ids.\n{}", error_message.error.message);
+										}
+										tx.send(JsonRpcResponse::Error(error_message)).ok();
 									}
 								}
 								dirty_pending_requests.remove(&timeout);
@@ -522,11 +436,6 @@ impl JsonRpcWsClient {
 	///
 	/// A `JsonRpcResponse` if a message is available, or `None` if the channel is closed.
 	pub async fn recv(&mut self) -> Option<JsonRpcResponse> {
-		// match self.ws_reader.recv().await {
-		// 	Some(message) => Some(message),
-		// 	None => None,
-		// }
-
 		self.ws_reader.recv().await
 	}
 
@@ -534,22 +443,10 @@ impl JsonRpcWsClient {
 	///
 	/// # Returns
 	///
-	/// A `serde_json::Value` if a notification is available, or `None` if the channel is closed.
+	/// A `Some(JsonRpcNotification)` if a notification is available, or `None` if the channel is closed.
 	pub async fn listen_for_notification(&mut self) -> Option<JsonRpcNotification> {
-		// match self.notification_reader.recv().await {
-		// 	Some(notification) => Some(notification),
-		// 	None => None,
-		// }
-
 		self.notification_reader.recv().await
 	}
-
-	// pub async fn listen_for_notification(&mut self) -> Option<serde_json::Value> {
-	//     match self.notification_reader.recv().await {
-	//         Some(message) => Some(message),
-	//         None => None,
-	//     }
-	// }
 
 	/// Sends a message to the WebSocket server without waiting for a response.
 	///
@@ -576,6 +473,7 @@ impl JsonRpcWsClient {
 	/// # Arguments
 	///
 	/// * `message` - The message to send.
+	/// * `timeout` - The maximum amount of time to wait for a response.
 	///
 	/// # Returns
 	///
@@ -587,8 +485,9 @@ impl JsonRpcWsClient {
 	pub async fn send_with_response(
 		&mut self,
 		mut message: JsonRpcRequest,
+		timeout: Option<Duration>,
 	) -> Result<JsonRpcResponse, Box<dyn std::error::Error + Send + Sync>> {
-		// pub async fn send_listen(&mut self, mut message: JsonRpcRequest) -> Result<JsonRpcResponse, Box<dyn std::error::Error>> {
+		let timeout = timeout.unwrap_or(DEFAULT_SEND_LISTEN_TIMEOUT);
 		let id = self.id_counter.fetch_add(1, Ordering::SeqCst) as u32;
 		message.id = id;
 
@@ -598,10 +497,9 @@ impl JsonRpcWsClient {
 			.await
 			.insert(id, (tx, PendingRequestStatus::Clean));
 
-		// self.send_no_response(message).await?; // Send the message
 		self.ws_writer.send(message).await?; // Send the message
 
-		match tokio::time::timeout(DEFAULT_SEND_LISTEN_TIMEOUT, rx).await {
+		match tokio::time::timeout(timeout, rx).await {
 			// Example timeout of 5 seconds
 			Ok(Ok(response)) => Ok(response),
 			Ok(Err(_)) => Err("Channel closed unexpectedly".to_string().into()),

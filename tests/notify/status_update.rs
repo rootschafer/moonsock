@@ -1,11 +1,11 @@
 use moonsock::{
 	response::{GcodeMove, PrinterObjectStatus, Toolhead},
-	JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam,
+	JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam,
 };
 
 #[test]
 fn test_serialize_notify_status_update() {
-	let data = MoonResponse::Notification {
+	let data = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyStatusUpdate,
 		params: Some(NotificationParam::StatusUpdate(
@@ -57,7 +57,7 @@ fn test_deserialize_notify_status_update() {
         ]
     }"##;
 
-	let expected = MoonResponse::Notification {
+	let expected = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyStatusUpdate,
 		params: Some(NotificationParam::StatusUpdate(
@@ -79,13 +79,14 @@ fn test_deserialize_notify_status_update() {
 		)),
 	};
 
-	let actual: MoonResponse = serde_json::from_str(json).unwrap();
+	// let actual: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual: MoonNotification = serde_json::from_str(json).unwrap();
 	assert_eq!(actual, expected);
 }
 
 // #[test]
 // fn test_serialize_notify_status_update() {
-//     let data = MoonResponse::Notification {
+//     let data = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyStatusUpdate,
 //         params: Some(NotificationParam::StatusUpdate(
@@ -139,7 +140,7 @@ fn test_deserialize_notify_status_update() {
 //         ]
 //     }"##;
 
-//     let expected = MoonResponse::Notification {
+//     let expected = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyStatusUpdate,
 //         params: Some(NotificationParam::StatusUpdate(
@@ -169,7 +170,7 @@ fn test_deserialize_notify_status_update() {
 
 // #[test]
 // fn test_serialize_notify_status_update() {
-//     let data = MoonResponse::Notification {
+//     let data = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyStatusUpdate,
 //         params: Some(NotificationParam::StatusUpdate(
@@ -253,7 +254,7 @@ fn test_deserialize_notify_status_update() {
 //         ]
 //     }"##;
 
-//     let expected = MoonResponse::Notification {
+//     let expected = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyStatusUpdate,
 //         params: Some(NotificationParam::StatusUpdate(
@@ -297,4 +298,3 @@ fn test_deserialize_notify_status_update() {
 //     let actual: MoonResponse = serde_json::from_str(json).unwrap();
 //     assert_eq!(actual, expected);
 // }
-

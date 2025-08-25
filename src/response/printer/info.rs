@@ -50,9 +50,6 @@ pub struct PrinterInfoResponse {
 	pub cpu_info: String,
 	pub klipper_path: String,
 	pub python_path: String,
-	// pub process_id: i32,
-	// pub user_id: i32,
-	// pub group_id: i32,
 	pub log_file: String,
 	pub config_file: String,
 }
@@ -63,13 +60,7 @@ mod tests {
 	use serde_json;
 
 	use super::*;
-	use crate::{
-		response::MoonResultData,
-		JsonRpcVersion,
-		MoonResponse,
-		// FastMoonConn
-		MoonrakerClient,
-	};
+	use crate::{response::MoonResultData, JsonRpcVersion, MoonResponse, MoonrakerClient};
 
 	#[test]
 	fn test_serialize() {
@@ -83,9 +74,6 @@ mod tests {
 			python_path: "/home/pi/klippy-env/bin/python".to_string(),
 			log_file: "/tmp/klippy.log".to_string(),
 			config_file: "/home/pi/printer.cfg".to_string(),
-			// process_id: 0,
-			// user_id: 0,
-			// group_id: 0,
 		};
 
 		let response = MoonResponse::MoonResult {
@@ -113,9 +101,6 @@ mod tests {
 			python_path: "/home/pi/klippy-env/bin/python".to_string(),
 			log_file: "/tmp/klippy.log".to_string(),
 			config_file: "/home/pi/printer.cfg".to_string(),
-			// process_id: 0,
-			// user_id: 0,
-			// group_id: 0,
 		};
 
 		let expected = MoonResponse::MoonResult {
@@ -128,16 +113,11 @@ mod tests {
 	}
 	#[tokio::test]
 	async fn printer_info_parsing() {
-		// let url = "ws://scanhead.local:7125/websocket";
 		let hostname = std::env::var("MOONRAKER_HOSTNAME").unwrap_or("localhost".to_string());
 		let port = std::env::var("MOONRAKER_PORT")
 			.unwrap_or("7125".to_string())
 			.parse::<u16>()
 			.unwrap();
-		// let mut connection = MoonConnection::new(url.to_string(), 1000, 1000).await;
-		// let mut connection = FastMoonConn::new(hostname, port, None, None, false).await.expect("Failed to connect to printer");
-		// let mut connection = MoonrakerClient::new_simple(hostname, Some(port), false).await.expect("Failed to connect to printer");
-		// let mut connection = MoonrakerClient::new(hostname, Some(port)).await.expect("Failed to connect to printer");
 		let mut connection = MoonrakerClient::connect(hostname, Some(port))
 			.await
 			.expect("Failed to connect to printer");
@@ -153,4 +133,3 @@ mod tests {
 		}
 	}
 }
-

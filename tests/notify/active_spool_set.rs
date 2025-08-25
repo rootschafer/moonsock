@@ -1,8 +1,10 @@
-use moonsock::{ActiveSpoolSetParams, JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{
+	ActiveSpoolSetParams, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam,
+};
 
 #[test]
 fn test_serialize_notify_active_spool_set() {
-	let message = MoonResponse::Notification {
+	let message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyActiveSpoolSet,
 		params: Some(NotificationParam::ActiveSpoolSet(ActiveSpoolSetParams { spool_id: 1 })),
@@ -17,14 +19,13 @@ fn test_serialize_notify_active_spool_set() {
 #[test]
 fn test_deserialize_notify_active_spool_set() {
 	let json = r#"{"jsonrpc":"2.0","method":"notify_active_spool_set","params":[{"spool_id":1}]}"#;
-	let expected_message = MoonResponse::Notification {
+	let expected_message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyActiveSpoolSet,
 		params: Some(NotificationParam::ActiveSpoolSet(ActiveSpoolSetParams { spool_id: 1 })),
 	};
 
-	let actual_message: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual: MoonNotification = serde_json::from_str(json).unwrap();
 
-	assert_eq!(expected_message, actual_message);
+	assert_eq!(expected_message, actual);
 }
-

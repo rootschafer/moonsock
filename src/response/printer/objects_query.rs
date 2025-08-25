@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-// use serde_json::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PrinterObjectsQueryResponse {
@@ -84,9 +83,9 @@ pub struct Toolhead {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Configfile {
 	#[serde(skip_serializing_if = "Option::is_none")]
-	pub config: Option<serde_json::Value>, // Can be more specific if the structure is known
+	pub config: Option<serde_json::Value>,
 	#[serde(skip_serializing_if = "Option::is_none")]
-	pub settings: Option<serde_json::Value>, // Can be more specific if the structure is known
+	pub settings: Option<serde_json::Value>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub save_config_pending: Option<bool>,
 }
@@ -189,12 +188,6 @@ pub struct ZTilt {
 	pub applied: bool,
 }
 
-// impl Default for ZTilt {
-// 	fn default() -> Self {
-// 		Self { applied: false }
-// 	}
-// }
-
 
 #[cfg(test)]
 mod tests {
@@ -293,4 +286,3 @@ mod tests {
 		assert_eq!(actual, expected);
 	}
 }
-

@@ -1,8 +1,10 @@
-use moonsock::{JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam, SpoolmanStatusChangedParams};
+use moonsock::{
+	JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam, SpoolmanStatusChangedParams,
+};
 
 #[test]
 fn test_serialize_notify_spoolman_status_changed() {
-	let message = MoonResponse::Notification {
+	let message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifySpoolmanStatusChanged,
 		params: Some(NotificationParam::SpoolmanStatusChanged(SpoolmanStatusChangedParams {
@@ -20,7 +22,7 @@ fn test_serialize_notify_spoolman_status_changed() {
 #[test]
 fn test_deserialize_notify_spoolman_status_changed() {
 	let json = r#"{"jsonrpc":"2.0","method":"notify_spoolman_status_changed","params":[{"spoolman_connected":false}]}"#;
-	let expected_message = MoonResponse::Notification {
+	let expected_message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifySpoolmanStatusChanged,
 		params: Some(NotificationParam::SpoolmanStatusChanged(SpoolmanStatusChangedParams {
@@ -28,8 +30,7 @@ fn test_deserialize_notify_spoolman_status_changed() {
 		})),
 	};
 
-	let actual_message: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual_message: MoonNotification = serde_json::from_str(json).unwrap();
 
 	assert_eq!(expected_message, actual_message);
 }
-

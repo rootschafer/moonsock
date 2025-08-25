@@ -77,4 +77,3 @@ mod tests {
 		assert_eq!(actual, expected);
 	}
 }
-

@@ -11,54 +11,57 @@
 // }
 
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RollOverResponse {
-    pub rolled_over: Vec<String>,
-    pub failed: HashMap<String, String>
+	pub rolled_over: Vec<String>,
+	pub failed: HashMap<String, String>,
 }
 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serde_json;
-    use std::collections::HashMap;
-    use crate::{MoonResponse, JsonRpcVersion, response::MoonResultData};
+	use std::collections::HashMap;
 
-    #[test]
-    fn test_serialize() {
-        let failed = HashMap::new();
-        let response = MoonResponse::MoonResult {
-            jsonrpc: JsonRpcVersion::V2,
-            result: MoonResultData::RollOverResponse(RollOverResponse {
-                rolled_over: vec!["moonraker".to_string(), "klipper".to_string()],
-                failed
-            }),
-            id: 345
-        };
+	use serde_json;
 
-        let expected = r#"{"jsonrpc":"2.0","result":{"rolled_over":["moonraker","klipper"],"failed":{}},"id":345}"#;
-        assert_eq!(serde_json::to_string(&response).unwrap(), expected);
-    }
+	use super::*;
+	use crate::{response::MoonResultData, JsonRpcVersion, MoonResponse};
 
-    #[test]
-    fn test_deserialize() {
-        let input = r#"{"jsonrpc":"2.0","result":{"rolled_over":["moonraker","klipper"],"failed":{}},"id":345}"#;
-        let response: MoonResponse = serde_json::from_str(input).unwrap();
+	#[test]
+	fn test_serialize() {
+		let failed = HashMap::new();
+		let response = MoonResponse::MoonResult {
+			jsonrpc: JsonRpcVersion::V2,
+			result: MoonResultData::RollOverResponse(RollOverResponse {
+				rolled_over: vec!["moonraker".to_string(), "klipper".to_string()],
+				failed,
+			}),
+			id: 345,
+		};
 
-        let failed = HashMap::new();
-        let expected = MoonResponse::MoonResult {
-            jsonrpc: JsonRpcVersion::V2,
-            result: MoonResultData::RollOverResponse(RollOverResponse {
-                rolled_over: vec!["moonraker".to_string(), "klipper".to_string()],
-                failed
-            }),
-            id: 345
-        };
+		let expected = r#"{"jsonrpc":"2.0","result":{"rolled_over":["moonraker","klipper"],"failed":{}},"id":345}"#;
+		assert_eq!(serde_json::to_string(&response).unwrap(), expected);
+	}
 
-        assert_eq!(response, expected);
-    }
+	#[test]
+	fn test_deserialize() {
+		let input = r#"{"jsonrpc":"2.0","result":{"rolled_over":["moonraker","klipper"],"failed":{}},"id":345}"#;
+		let response: MoonResponse = serde_json::from_str(input).unwrap();
+
+		let failed = HashMap::new();
+		let expected = MoonResponse::MoonResult {
+			jsonrpc: JsonRpcVersion::V2,
+			result: MoonResultData::RollOverResponse(RollOverResponse {
+				rolled_over: vec!["moonraker".to_string(), "klipper".to_string()],
+				failed,
+			}),
+			id: 345,
+		};
+
+		assert_eq!(response, expected);
+	}
 }

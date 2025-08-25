@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -46,7 +48,7 @@ pub enum HeaterNames {
 	TemperatureSensor,
 	NameStr(String),
 }
-use std::collections::HashMap;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TemperatureStore {
 	#[serde(flatten)]
@@ -61,10 +63,3 @@ impl TemperatureStore {
 		self.items.insert(key, value);
 	}
 }
-
-// impl Default for TemperatureStore {
-// 	fn default() -> Self {
-// 		Self::new()
-// 	}
-// }
-

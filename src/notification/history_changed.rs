@@ -19,4 +19,3 @@ pub struct JobObject {
 	pub start_time: f64,
 	pub total_duration: f64,
 }
-

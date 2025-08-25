@@ -3,7 +3,6 @@ use std::{
 	time::{Duration, Instant},
 };
 
-// use serde::Serialize;
 use tokio::{
 	io::{stdin, stdout, AsyncWriteExt},
 	sync::mpsc::{self, error::SendError},
@@ -14,24 +13,9 @@ use spinoff::{spinners, Color, Spinner};
 use futures_util::StreamExt;
 
 use crate::{
-	response::{PrinterState, ServerInfo},
-	MoonNotification,
-};
-use crate::{
-	// jsonrpc_ws_client::JsonRpcWsClient,
-	jsonrpc_ws_client::{
-		JsonRpcRequest,
-		// JsonRpcResponse,
-		JsonRpcWsClient,
-	},
-	// connection::PrinterSafetyStatus,
-	response::{MoonResultData, PrinterInfoResponse},
-	MoonErrorContent,
-	MoonMethod,
-	MoonParam,
-	MoonRequest,
-	MoonResponse,
-	PrinterObject,
+	jsonrpc_ws_client::{JsonRpcRequest, JsonRpcWsClient},
+	response::{MoonResultData, PrinterInfoResponse, PrinterState, ServerInfo},
+	MoonErrorContent, MoonMethod, MoonNotification, MoonParam, MoonRequest, MoonResponse, PrinterObject,
 };
 
 
@@ -87,7 +71,10 @@ pub struct MoonrakerClient {
 
 impl MoonrakerClient {
 	/// Creates a new `MoonrakerClient` with the given hostname and port.
-	pub async fn connect(hostname: String, port: Option<u16>) -> Result<MoonrakerClient, Box<dyn std::error::Error + Send + Sync>> {
+	pub async fn connect(
+		hostname: String,
+		port: Option<u16>,
+	) -> Result<MoonrakerClient, Box<dyn std::error::Error + Send + Sync>> {
 		let port = port.unwrap_or(DEFAULT_MOONRAKER_PORT);
 		let url = format!("ws://{hostname}:{port}/websocket");
 		Self::connect_with_buffer_sizes(url, None, None).await
@@ -113,14 +100,26 @@ impl MoonrakerClient {
 	pub async fn send_with_response(
 		&mut self,
 		message: MoonRequest,
+		timeout: Option<Duration>,
 	) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
-		let response = self.connection.send_with_response(message.into()).await?;
+		let response = self
+			.connection
+			.send_with_response(message.into(), timeout)
+			.await?;
 		Ok(response.into())
 	}
 
 	/// Sends a message to Moonraker and waits for an OK response.
-	pub async fn send_wait_for_ok(&mut self, message: MoonRequest) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-		let res = match self.connection.send_with_response(message.into()).await {
+	pub async fn send_wait_for_ok(
+		&mut self,
+		message: MoonRequest,
+		timeout: Option<Duration>,
+	) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+		let res = match self
+			.connection
+			.send_with_response(message.into(), timeout)
+			.await
+		{
 			Ok(res) => res.into(),
 			Err(e) => {
 				tracing::error!("Error sending message: {}", e);
@@ -144,13 +143,13 @@ impl MoonrakerClient {
 
 	/// Listens for a JSON-RPC notification from Moonraker.
 	/// Returns None if the underlying channel is closed.
-	// pub async fn listen_for_notification(&mut self) -> Option<crate::jsonrpc_ws_client::JsonRpcNotification> {
-	// pub async fn listen_for_notification(&mut self) -> Option<MoonNotification> {
-	pub async fn listen_for_notification(&mut self) -> Option<Result<MoonNotification, Box<dyn std::error::Error + Send + Sync>>> {
-		match self.connection.listen_for_notification().await {
-			Some(notification) => Some(notification.try_into()),
-			None => None,
-		}
+	pub async fn listen_for_notification(
+		&mut self,
+	) -> Option<Result<MoonNotification, Box<dyn std::error::Error + Send + Sync>>> {
+		self.connection
+			.listen_for_notification()
+			.await
+			.map(|notification| notification.try_into())
 	}
 
 	pub async fn create_user(
@@ -165,7 +164,7 @@ impl MoonrakerClient {
 				password: password.into(),
 			}),
 		);
-		self.send_with_response(message).await
+		self.send_with_response(message, None).await
 	}
 
 	pub async fn authenticate(
@@ -179,7 +178,7 @@ impl MoonrakerClient {
 			source: "moonraker".to_string(),
 		};
 		let message = MoonRequest::new(MoonMethod::AccessLogin, Some(params));
-		self.send_with_response(message).await
+		self.send_with_response(message, None).await
 	}
 
 	/// Ensures that the printer is ready.
@@ -302,7 +301,7 @@ impl MoonrakerClient {
 	/// Gets the server information.
 	pub async fn get_server_info(&mut self) -> Result<ServerInfo, Box<dyn std::error::Error>> {
 		let message = MoonRequest::new(MoonMethod::ServerInfo, None);
-		let res = match self.send_with_response(message).await {
+		let res = match self.send_with_response(message, None).await {
 			Ok(res) => res,
 			Err(e) => {
 				tracing::error!("Error sending message: {}", e);
@@ -327,7 +326,7 @@ impl MoonrakerClient {
 	/// Gets the printer information.
 	pub async fn get_printer_info(&mut self) -> Result<PrinterInfoResponse, Box<dyn std::error::Error>> {
 		let message = MoonRequest::new(MoonMethod::PrinterInfo, None);
-		let res = match self.send_with_response(message).await {
+		let res = match self.send_with_response(message, None).await {
 			Ok(res) => res,
 			Err(e) => {
 				tracing::error!("Error sending message: {}", e);
@@ -361,7 +360,7 @@ impl MoonrakerClient {
 		};
 		let msg = MoonRequest::new(MoonMethod::PrinterObjectsQuery, Some(param));
 
-		match self.send_with_response(msg).await {
+		match self.send_with_response(msg, None).await {
 			Ok(res) => match res {
 				MoonResponse::MoonResult { result, .. } => match result {
 					MoonResultData::PrinterObjectsQueryResponse(res) => match res.status.toolhead {
@@ -413,7 +412,7 @@ impl MoonrakerClient {
 		let param = MoonParam::PrinterObjectsQuery { objects: PrinterObject::ZTilt(None) };
 		let msg = MoonRequest::new(MoonMethod::PrinterObjectsQuery, Some(param));
 
-		match self.send_with_response(msg).await {
+		match self.send_with_response(msg, None).await {
 			Ok(res) => match res {
 				MoonResponse::MoonResult { result, .. } => match result {
 					MoonResultData::PrinterObjectsQueryResponse(res) => match res.status.z_tilt {

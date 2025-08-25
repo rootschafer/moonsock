@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	for _ in 0..10 {
 		let msg = MoonRequest::new(MoonMethod::PrinterInfo, None);
 		// let res = connection.send_listen(msg).await?;
-		let res = connection.send_with_response(msg).await.unwrap();
+		let res = connection.send_with_response(msg, None).await.unwrap();
 		println!("Res: {res:?}");
 	}
 

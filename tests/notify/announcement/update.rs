@@ -1,10 +1,11 @@
 use moonsock::{
-	AnnouncementEntry, AnnouncementUpdateParam, JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam,
+	AnnouncementEntry, AnnouncementUpdateParam, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod,
+	NotificationParam,
 };
 
 // #[test]
 // fn test_serialize_announcement() {
-//     let notification = MoonResponse::Notification {
+//     let notification = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyAnnouncementUpdate,
 //         params: Some(NotificationParam::Announcement(AnnouncementParams {
@@ -70,7 +71,7 @@ use moonsock::{
 
 //     let deserialized: MoonResponse = serde_json::from_str(json).unwrap();
 
-//     if let MoonResponse::Notification {
+//     if let MoonNotification {
 //         jsonrpc,
 //         method,
 //         params,
@@ -92,7 +93,7 @@ use moonsock::{
 
 #[test]
 fn test_serialize_announcement_update() {
-	let notification = MoonResponse::Notification {
+	let notification = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyAnnouncementUpdate,
 		params: Some(NotificationParam::AnnouncementUpdate(AnnouncementUpdateParam {
@@ -125,32 +126,33 @@ fn test_serialize_announcement_update() {
 #[test]
 fn test_deserialize_announcement_update() {
 	let json = r#"{"jsonrpc":"2.0","method":"notify_announcement_update","params":[{"entries":[{"entry_id":"arksine/moonlight/issue/3","url":"https://github.com/Arksine/moonlight/issues/3","title":"Test announcement 3","description":"Test Description [with a link](https://moonraker.readthedocs.io).","priority":"normal","date":1647459219,"dismissed":false,"source":"moonlight","feed":"moonlight"}]}]}"#;
-	let deserialized: MoonResponse = serde_json::from_str(json).unwrap();
+	let deserialized: MoonNotification = serde_json::from_str(json).unwrap();
 
-	if let MoonResponse::Notification { jsonrpc, method, params } = deserialized {
-		assert_eq!(jsonrpc, JsonRpcVersion::V2);
-		assert_eq!(method, NotificationMethod::NotifyAnnouncementUpdate);
-		if let Some(NotificationParam::AnnouncementUpdate(param)) = params {
-			// let param = param[0].clone();
-			assert_eq!(param.entries.len(), 1);
-			let entry = &param.entries[0];
-			assert_eq!(entry.entry_id, "arksine/moonlight/issue/3");
-			assert_eq!(entry.url, "https://github.com/Arksine/moonlight/issues/3");
-			assert_eq!(entry.title, "Test announcement 3");
-			assert_eq!(
-				entry.description,
-				"Test Description [with a link](https://moonraker.readthedocs.io)."
-			);
-			assert_eq!(entry.priority, "normal");
-			assert_eq!(entry.date, 1647459219);
-			assert!(!entry.dismissed);
-			assert_eq!(entry.source, "moonlight");
-			assert_eq!(entry.feed, "moonlight");
-		} else {
-			panic!("Invalid params");
-		}
+	let MoonNotification { jsonrpc, method, params } = deserialized;
+
+	// if let MoonNotification { jsonrpc, method, params } = deserialized {
+	assert_eq!(jsonrpc, JsonRpcVersion::V2);
+	assert_eq!(method, NotificationMethod::NotifyAnnouncementUpdate);
+	if let Some(NotificationParam::AnnouncementUpdate(param)) = params {
+		// let param = param[0].clone();
+		assert_eq!(param.entries.len(), 1);
+		let entry = &param.entries[0];
+		assert_eq!(entry.entry_id, "arksine/moonlight/issue/3");
+		assert_eq!(entry.url, "https://github.com/Arksine/moonlight/issues/3");
+		assert_eq!(entry.title, "Test announcement 3");
+		assert_eq!(
+			entry.description,
+			"Test Description [with a link](https://moonraker.readthedocs.io)."
+		);
+		assert_eq!(entry.priority, "normal");
+		assert_eq!(entry.date, 1647459219);
+		assert!(!entry.dismissed);
+		assert_eq!(entry.source, "moonlight");
+		assert_eq!(entry.feed, "moonlight");
 	} else {
-		panic!("Invalid MoonResponse");
+		panic!("Invalid params");
 	}
+	// } else {
+	// 	panic!("Invalid MoonResponse");
+	// }
 }
-

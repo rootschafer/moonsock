@@ -1,4 +1,7 @@
-use moonsock::{HistoryChangedParam, JobObject, JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{
+	HistoryChangedParam, JobObject, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod,
+	NotificationParam,
+};
 
 #[test]
 fn test_deserialize_notify_history_changed() {
@@ -24,7 +27,7 @@ fn test_deserialize_notify_history_changed() {
         ]
     }"#;
 
-	let expected = MoonResponse::Notification {
+	let expected = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyHistoryChanged,
 		params: Some(NotificationParam::HistoryChanged(vec![HistoryChangedParam {
@@ -44,13 +47,13 @@ fn test_deserialize_notify_history_changed() {
 		}])),
 	};
 
-	let actual: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual: MoonNotification = serde_json::from_str(json).unwrap();
 	assert_eq!(actual, expected);
 }
 
 #[test]
 fn test_serialize_notify_history_changed() {
-	let data = MoonResponse::Notification {
+	let data = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyHistoryChanged,
 		params: Some(NotificationParam::HistoryChanged(vec![HistoryChangedParam {
@@ -74,4 +77,3 @@ fn test_serialize_notify_history_changed() {
 	let actual = serde_json::to_string(&data).unwrap();
 	assert_eq!(actual, expected);
 }
-

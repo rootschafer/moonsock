@@ -1,8 +1,8 @@
-use moonsock::{EntryId, JsonRpcVersion, MoonResponse, NotificationMethod, NotificationParam};
+use moonsock::{EntryId, JsonRpcVersion, MoonNotification, MoonResponse, NotificationMethod, NotificationParam};
 
 #[test]
 fn test_serialize_notify_announcement_wake() {
-	let message = MoonResponse::Notification {
+	let message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyAnnouncementWake,
 		params: Some(NotificationParam::AnnouncementEntryId(EntryId {
@@ -20,7 +20,7 @@ fn test_serialize_notify_announcement_wake() {
 // #[test]
 // fn test_deserialize_notify_announcement_wake() {
 //     let json = r#"{"jsonrpc":"2.0","method":"notify_announcement_wake","params":[{"entry_id":"arksine/moonlight/issue/1"}]}"#;
-//     let expected_message = MoonResponse::Notification {
+//     let expected_message = MoonNotification {
 //         jsonrpc: JsonRpcVersion::V2,
 //         method: NotificationMethod::NotifyAnnouncementWake,
 //         params: Some(NotificationParam::AnnouncementWake(AnnouncementDismissedParam {
@@ -37,7 +37,7 @@ fn test_serialize_notify_announcement_wake() {
 fn test_deserialize_notify_announcement_wake() {
 	let json =
 		r#"{"jsonrpc":"2.0","method":"notify_announcement_wake","params":[{"entry_id":"arksine/moonlight/issue/1"}]}"#;
-	let expected_message = MoonResponse::Notification {
+	let expected_message = MoonNotification {
 		jsonrpc: JsonRpcVersion::V2,
 		method: NotificationMethod::NotifyAnnouncementWake,
 		params: Some(NotificationParam::AnnouncementEntryId(EntryId {
@@ -45,8 +45,7 @@ fn test_deserialize_notify_announcement_wake() {
 		})),
 	};
 
-	let actual_message: MoonResponse = serde_json::from_str(json).unwrap();
+	let actual_message: MoonNotification = serde_json::from_str(json).unwrap();
 
 	assert_eq!(expected_message, actual_message);
 }
-

@@ -1,16 +1,10 @@
-// use jsonrpc_message_derive::JsonRpcMessage;
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-	jsonrpc_ws_client::{
-		JsonRpcError,
-		JsonRpcResponse,
-		// JsonRpcMessage
-	},
-	response::{ServerConfig, ServerInfo},
-	JsonRpcVersion, MoonResultData, NotificationMethod, NotificationParam,
+	jsonrpc_ws_client::{JsonRpcError, JsonRpcResponse},
+	JsonRpcVersion, MoonResultData,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -27,7 +21,6 @@ impl fmt::Display for MoonErrorContent {
 
 impl std::error::Error for MoonErrorContent {}
 
-// #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonRpcMessage)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 #[allow(clippy::large_enum_variant)]
@@ -39,32 +32,25 @@ pub enum MoonResponse {
 	},
 	MoonError {
 		jsonrpc: JsonRpcVersion,
-		// error: MoonErrorContent,
 		error: JsonRpcError,
 		#[serde(skip_serializing_if = "Option::is_none")]
 		id: Option<u32>,
 	},
-	Notification {
-		jsonrpc: JsonRpcVersion,
-		method: NotificationMethod,
-		#[serde(skip_serializing_if = "Option::is_none")]
-		params: Option<NotificationParam>,
-	},
+	// Notification {
+	// 	jsonrpc: JsonRpcVersion,
+	// 	method: NotificationMethod,
+	// 	#[serde(skip_serializing_if = "Option::is_none")]
+	// 	params: Option<NotificationParam>,
+	// },
 }
 
 impl From<JsonRpcResponse> for MoonResponse {
 	fn from(response: JsonRpcResponse) -> Self {
 		match response {
-			// JsonRpcResponse::Result(result) => MoonResponse::MoonResult {
-			// 	jsonrpc: JsonRpcVersion::V2,
-			// 	result: serde_json::from_value(result.result).unwrap(),
-			// 	id: 0,
-			// },
-			JsonRpcResponse::Result(result) => match serde_json::from_value::<MoonResultData>(result.result) {
+			JsonRpcResponse::Ok(result) => match serde_json::from_value::<MoonResultData>(result.result) {
 				Ok(moon_result) => MoonResponse::MoonResult {
 					jsonrpc: JsonRpcVersion::V2,
 					result: moon_result,
-					// id: 0,
 					id: result.id,
 				},
 				Err(e) => {
@@ -76,38 +62,18 @@ impl From<JsonRpcResponse> for MoonResponse {
 							message: "Failed to parse MoonResultData".to_string(),
 							data: None,
 						},
-						// id: None,
 						id: Some(result.id),
 					}
-				},
+				}
 			},
-			JsonRpcResponse::ReturnedError(error) => MoonResponse::MoonError {
+			JsonRpcResponse::Error(error) => MoonResponse::MoonError {
 				jsonrpc: JsonRpcVersion::V2,
-				// error: serde_json::from_value(error).unwrap(),
-				error,
-				id: None,
-				// id: Some(error.id),
+				error: error.error,
+				id: error.id,
 			},
 		}
 	}
 }
-
-// impl JsonRpcMessage for MoonResponse {
-//     fn id(&self) -> Option<u32> {
-//         match self {
-//             MoonResponse::MoonResult { id, .. } => Some(*id),
-//             MoonResponse::MoonError { id, .. } => *id,
-//             MoonResponse::Notification { .. } => None,
-//         }
-//     }
-//     fn set_id(&mut self, new_id: u32) {
-//         match self {
-//             MoonResponse::MoonResult { id, .. } => *id = new_id,
-//             MoonResponse::MoonError { id, .. } => *id = Some(new_id),
-//             MoonResponse::Notification { .. } => {},
-//         }
-//     }
-// }
 
 impl Default for MoonResponse {
 	fn default() -> Self {
@@ -120,18 +86,18 @@ impl Default for MoonResponse {
 }
 
 impl MoonResponse {
-	pub fn method(&self) -> Option<&NotificationMethod> {
-		match self {
-			Self::MoonResult { .. } | Self::MoonError { .. } => None,
-			Self::Notification { method, .. } => Some(method),
-		}
-	}
-	pub fn params(&self) -> Option<NotificationParam> {
-		match self {
-			Self::MoonResult { .. } | Self::MoonError { .. } => None,
-			Self::Notification { params, .. } => params.clone(),
-		}
-	}
+	// pub fn method(&self) -> Option<&NotificationMethod> {
+	// 	match self {
+	// 		Self::MoonResult { .. } | Self::MoonError { .. } => None,
+	// 		Self::Notification { method, .. } => Some(method),
+	// 	}
+	// }
+	// pub fn params(&self) -> Option<NotificationParam> {
+	// 	match self {
+	// 		Self::MoonResult { .. } | Self::MoonError { .. } => None,
+	// 		Self::Notification { params, .. } => params.clone(),
+	// 	}
+	// }
 	pub fn set_id(&mut self, new_id: u32) {
 		match self {
 			Self::MoonError { jsonrpc, error, .. } => {
@@ -149,37 +115,7 @@ impl MoonResponse {
 					id: new_id,
 				};
 				*self = new;
-			}
-			Self::Notification { .. } => {}
+			} // Self::Notification { .. } => {}
 		}
 	}
-	pub fn default_server_info_result(server_info: ServerInfo) -> Self {
-		MoonResponse::MoonResult {
-			jsonrpc: JsonRpcVersion::V2,
-			result: MoonResultData::ServerInfo(server_info),
-			id: 0,
-		}
-	}
-	pub fn default_server_config_result(config: ServerConfig) -> Self {
-		MoonResponse::MoonResult {
-			jsonrpc: JsonRpcVersion::V2,
-			result: MoonResultData::ServerConfig(config),
-			id: 0,
-		}
-	}
-	// pub fn new_error(error: MoonErrorContent, id: u32) -> Self {
-	//     Self::MoonError {
-	//         jsonrpc: JsonRpcVersion::V2,
-	//         error,
-	//         id,
-	//     }
-	// }
-	// pub fn new_result(result: moon_result::MoonResultData, id: u32) -> Self {
-	//     Self::MoonResult {
-	//         jsonrpc: JsonRpcVersion::V2,
-	//         result,
-	//         id,
-	//     }
-	// }
 }
-

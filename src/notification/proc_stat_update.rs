@@ -8,8 +8,6 @@ use crate::response::MoonrakerStats;
 pub struct NotifyProcStatUpdateParam {
 	pub moonraker_stats: MoonrakerStats,
 	pub cpu_temp: Option<f64>,
-	// pub network: HashMap<String, NetworkDetails>,
-	// pub system_cpu_usage: HashMap<String, f64>,
 	pub network: BTreeMap<String, NetworkDetails>,
 	pub system_cpu_usage: BTreeMap<String, f64>,
 	pub websocket_connections: u64,
@@ -21,4 +19,3 @@ pub struct NetworkDetails {
 	pub tx_bytes: u64,
 	pub bandwidth: f64,
 }
-
