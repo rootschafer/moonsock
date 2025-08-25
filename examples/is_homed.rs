@@ -37,11 +37,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// let mut connection = FastMoonConn::new(hostname, port, None, None, true).await?;
 	// let mut connection = MoonConnection::new_simple(hostname, Some(port), false).await?;
 	// let mut connection = MoonrakerClient::new_simple(hostname, Some(port), false).await?;
-	let mut connection = MoonrakerClient::connect(hostname, Some(port)).await?;
+	let mut connection = MoonrakerClient::connect(hostname, Some(port))
+		.await
+		.unwrap();
 	let username = env::var("MOONRAKER_USERNAME").expect("Please add the `MOONRAKER_USERNAME` environment variable");
 	let password = env::var("MOONRAKER_PASSWORD").expect("Please add the `MOONRAKER_PASSWORD` environment variable");
 	// connection.create_user(&username, &password).await?;
-	connection.authenticate(username, password).await?;
+	connection.authenticate(username, password).await.unwrap();
 	println!("Connected to moonraker");
 	match connection.ensure_ready().await {
 		PrinterSafetyStatus::Ready => println!("Printer is ready!"),
@@ -69,4 +71,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 	Ok(())
 }
-

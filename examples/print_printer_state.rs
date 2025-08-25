@@ -15,7 +15,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		},
 		Err(_e) => DEFAULT_MOONRAKER_PORT,
 	};
-	let mut connection = MoonrakerClient::connect(hostname, Some(port)).await?;
+	let mut connection = MoonrakerClient::connect(hostname, Some(port))
+		.await
+		.unwrap();
 
 	match connection.get_printer_info().await {
 		Ok(printer_info) => {
@@ -28,4 +30,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 	Ok(())
 }
-

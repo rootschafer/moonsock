@@ -251,9 +251,6 @@ impl JsonRpcWsClient {
 		let (notification_sender, notification_reader) = tokio::sync::mpsc::channel(1000);
 		let (shutdown_sender, mut shutdown_receiver) = tokio::sync::mpsc::channel(10);
 
-		// let connect_addr = Url::parse(&url)?;
-		// let (ws_stream, _) = connect_async(&connect_addr).await?;
-
 		let request = url.into_client_request().expect("Invalid URL");
 		let (ws_stream, _) = connect_async(request).await?;
 
@@ -316,21 +313,6 @@ impl JsonRpcWsClient {
 								let maybe_notification: Result<JsonRpcNotification, serde_json::Error> = serde_json::from_str(&message_txt);
 								match maybe_notification {
 									Ok(notification) => {
-										// // Handle notification - add comprehensive debug logging
-										// let method_name = &notification.method;
-										//
-										// // Special handling for proc_stat_update to reduce noise
-										// if method_name == "notify_proc_stat_update" {
-										// 	tracing::trace!("Received {} notification: {}", method_name, message_txt);
-										// } else {
-										// 	tracing::debug!("📡 Received {} notification: {}", method_name, message_txt);
-										//
-										// 	// Log notification parameters for debugging temperature issues
-										// 	if let Some(params) = &notification.params {
-										// 		tracing::debug!("📡 {} params: {}", method_name, serde_json::to_string_pretty(params).unwrap_or_else(|_| params.to_string()));
-										// 	}
-										// }
-
 										notification_sender.send(notification).await.ok();
 									},
 									Err(_) => {

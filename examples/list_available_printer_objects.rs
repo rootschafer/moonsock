@@ -1,7 +1,7 @@
 // use moonsock::{
 //     // FastMoonConn,
 //     MoonrakerClient,
-//     // MoonMSG, 
+//     // MoonMSG,
 //     MoonRequest, MoonResponse,
 //     MoonMethod, response::MoonResultData
 // };
@@ -46,48 +46,52 @@
 // }
 
 
-use moonsock::{
-    // moonraker_client_new::MoonrakerClient,
-    MoonrakerClient,
-    MoonRequest, MoonMethod, MoonResponse, MoonResultData,
-};
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+use std::{env, error::Error};
 
-use std::error::Error;
-use std::env;
+use moonsock::{
+	MoonMethod,
+	MoonRequest,
+	MoonResponse,
+	MoonResultData,
+	// moonraker_client_new::MoonrakerClient,
+	MoonrakerClient,
+};
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 const DEFAULT_MOONRAKER_PORT: u16 = 7125;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(EnvFilter::from_default_env())
-        .init();
+	tracing_subscriber::registry()
+		.with(fmt::layer())
+		.with(EnvFilter::from_default_env())
+		.init();
 
-    let hostname = env::var("MOONRAKER_HOSTNAME")?;
-    let port = env::var("MOONRAKER_PORT")?
-        .parse::<u16>()
-        .unwrap_or(DEFAULT_MOONRAKER_PORT);
+	let hostname = env::var("MOONRAKER_HOSTNAME")?;
+	let port = env::var("MOONRAKER_PORT")?
+		.parse::<u16>()
+		.unwrap_or(DEFAULT_MOONRAKER_PORT);
 
-    let mut connection = MoonrakerClient::connect(hostname, Some(port)).await?;
-    let username = env::var("MOONRAKER_USERNAME")?;
-    let password = env::var("MOONRAKER_PASSWORD")?;
-    connection.authenticate(username, password).await?;
-    println!("Connected to moonraker");
+	let mut connection = MoonrakerClient::connect(hostname, Some(port))
+		.await
+		.unwrap();
+	let username = env::var("MOONRAKER_USERNAME")?;
+	let password = env::var("MOONRAKER_PASSWORD")?;
+	connection.authenticate(username, password).await.unwrap();
+	println!("Connected to moonraker");
 
-    let msg = MoonRequest::new(MoonMethod::PrinterObjectsList, None);
-    let response = connection.send_with_response(msg).await?;
+	let msg = MoonRequest::new(MoonMethod::PrinterObjectsList, None);
+	let response = connection.send_with_response(msg).await.unwrap();
 
-    match response {
-        MoonResponse::MoonResult { result, .. } => match result {
-            MoonResultData::PrinterObjectsListResponse(data) => {
-                println!("Available Printer Objects: {:?}", data.objects);
-            }
-            _ => println!("Unexpected response format"),
-        },
-        _ => println!("Unexpected response type"),
-    }
+	match response {
+		MoonResponse::MoonResult { result, .. } => match result {
+			MoonResultData::PrinterObjectsListResponse(data) => {
+				println!("Available Printer Objects: {:?}", data.objects);
+			}
+			_ => println!("Unexpected response format"),
+		},
+		_ => println!("Unexpected response type"),
+	}
 
-    Ok(())
+	Ok(())
 }
