@@ -32,8 +32,8 @@ pub use jsonrpc_ws_client::JsonRpcNotification;
 // pub use moonraker_client::*;
 
 // pub mod moonraker_client_new;
-mod moonraker_client_new;
-pub use moonraker_client_new::*;
+mod moonraker_client;
+pub use moonraker_client::*;
 
 /// ---------------------- Request Serializing ------------------------
 

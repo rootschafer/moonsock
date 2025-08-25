@@ -68,7 +68,10 @@ impl JsonRpcRequest {
 	/// # Returns
 	///
 	/// A `Result` containing the new request or an error if the request could not be built.
-	pub fn build(method: impl Serialize, params: Option<impl Serialize>) -> Result<Self, Box<dyn std::error::Error>> {
+	pub fn build(
+		method: impl Serialize,
+		params: Option<impl Serialize>,
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
 		let m = serde_json::to_value(&method).unwrap();
 		match m {
 			serde_json::Value::String(_) => Ok(Self {
@@ -162,7 +165,7 @@ impl JsonRpcNotification {
 	pub fn build(
 		method: impl Into<String>,
 		params: Option<impl Serialize>,
-	) -> Result<Self, Box<dyn std::error::Error>> {
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
 		let method = method.into();
 		let params = match params {
 			Some(object) => match serde_json::to_value(object) {
@@ -239,7 +242,7 @@ impl JsonRpcWsClient {
 		url: String,
 		writer_buffer_size: Option<usize>,
 		reader_buffer_size: Option<usize>,
-	) -> Result<Self, Box<dyn std::error::Error>> {
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
 		// pub async fn new(url: String, writer_buffer_size: Option<usize>, reader_buffer_size: Option<usize>) -> Result<Self, Box<dyn std::error::Error>> {
 		let writer_buffer_size = writer_buffer_size.unwrap_or(DEFAULT_WRITER_BUFFER_SIZE);
 		let reader_buffer_size = reader_buffer_size.unwrap_or(DEFAULT_READER_BUFFER_SIZE);
@@ -313,9 +316,21 @@ impl JsonRpcWsClient {
 								let maybe_notification: Result<JsonRpcNotification, serde_json::Error> = serde_json::from_str(&message_txt);
 								match maybe_notification {
 									Ok(notification) => {
-										// Handle notification
-										tracing::trace!("Received Notification: \n{}", message_txt);
-										// tracing::debug!("Received Notification: \n{}", message_txt);
+										// // Handle notification - add comprehensive debug logging
+										// let method_name = &notification.method;
+										//
+										// // Special handling for proc_stat_update to reduce noise
+										// if method_name == "notify_proc_stat_update" {
+										// 	tracing::trace!("Received {} notification: {}", method_name, message_txt);
+										// } else {
+										// 	tracing::debug!("📡 Received {} notification: {}", method_name, message_txt);
+										//
+										// 	// Log notification parameters for debugging temperature issues
+										// 	if let Some(params) = &notification.params {
+										// 		tracing::debug!("📡 {} params: {}", method_name, serde_json::to_string_pretty(params).unwrap_or_else(|_| params.to_string()));
+										// 	}
+										// }
+
 										notification_sender.send(notification).await.ok();
 									},
 									Err(_) => {
@@ -590,7 +605,7 @@ impl JsonRpcWsClient {
 	pub async fn send_with_response(
 		&mut self,
 		mut message: JsonRpcRequest,
-	) -> Result<JsonRpcResponse, Box<dyn std::error::Error>> {
+	) -> Result<JsonRpcResponse, Box<dyn std::error::Error + Send + Sync>> {
 		// pub async fn send_listen(&mut self, mut message: JsonRpcRequest) -> Result<JsonRpcResponse, Box<dyn std::error::Error>> {
 		let id = self.id_counter.fetch_add(1, Ordering::SeqCst) as u32;
 		message.id = id;

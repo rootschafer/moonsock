@@ -20,3 +20,4 @@ mod webcams_changed;
 mod spoolman_status_changed;
 mod active_spool_set;
 mod agent_event;
+mod moon_notification;
