@@ -17,7 +17,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 const DEFAULT_MOONRAKER_PORT: u16 = 7125;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 	tracing_subscriber::registry()
 		.with(fmt::layer())
 		.with(EnvFilter::from_default_env())

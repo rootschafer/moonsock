@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 use tokio::{
 	sync::{
 		mpsc::{self, error::SendError},
-		oneshot, Mutex,
+		oneshot::{self, error::RecvError},
+		Mutex,
 	},
 	time::{Duration, Instant},
 };
@@ -36,6 +37,14 @@ pub enum JsonRpcVersion {
 	#[serde(rename = "2.0")]
 	V2,
 }
+
+
+// /// Converts a `Box<dyn std::error::Error + Send + Sync + 'static>` to a `MoonSendError`.
+// impl<T> From<Box<dyn std::error::Error + Send + Sync + 'static>> for MoonSendError<T> {
+// 	fn from(err: Box<dyn std::error::Error + Send + Sync + 'static>) -> Self {
+// 		MoonSendError::String(err.to_string())
+// 	}
+// }
 
 /// A JSON-RPC request.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -162,7 +171,7 @@ impl JsonRpcNotification {
 	pub fn build(
 		method: impl Into<String>,
 		params: Option<impl Serialize>,
-	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let method = method.into();
 		let params = match params {
 			Some(object) => match serde_json::to_value(object) {
@@ -234,7 +243,7 @@ impl JsonRpcWsClient {
 		url: String,
 		writer_buffer_size: Option<usize>,
 		reader_buffer_size: Option<usize>,
-	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let writer_buffer_size = writer_buffer_size.unwrap_or(DEFAULT_WRITER_BUFFER_SIZE);
 		let reader_buffer_size = reader_buffer_size.unwrap_or(DEFAULT_READER_BUFFER_SIZE);
 
@@ -486,7 +495,9 @@ impl JsonRpcWsClient {
 		&mut self,
 		mut message: JsonRpcRequest,
 		timeout: Option<Duration>,
-	) -> Result<JsonRpcResponse, Box<dyn std::error::Error + Send + Sync>> {
+		// ) -> Result<JsonRpcResponse, Box<dyn std::error::Error + Send + Sync>> {
+		// ) -> Result<JsonRpcResponse, WsSendError<JsonRpcRequest>> {
+	) -> Result<JsonRpcResponse, WsSendError> {
 		let timeout = timeout.unwrap_or(DEFAULT_SEND_LISTEN_TIMEOUT);
 		let id = self.id_counter.fetch_add(1, Ordering::SeqCst) as u32;
 		message.id = id;
@@ -502,8 +513,30 @@ impl JsonRpcWsClient {
 		match tokio::time::timeout(timeout, rx).await {
 			// Example timeout of 5 seconds
 			Ok(Ok(response)) => Ok(response),
-			Ok(Err(_)) => Err("Channel closed unexpectedly".to_string().into()),
-			Err(_) => Err("Timeout waiting for response".to_string().into()),
+			// Ok(Err(_)) => Err("Channel closed unexpectedly".to_string().into()),
+			Ok(Err(e)) => Err(WsSendError::RecvError(e)),
+			// Err(_) => Err("Timeout waiting for response".to_string().into()),
+			Err(_) => Err(WsSendError::Timeout(timeout)),
 		}
 	}
 }
+
+/// An error that can occur when sending a message to Moonraker.
+#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+pub enum WsSendError {
+	/// An error occurred while sending a message.
+	#[error("Error sending message: {0}")]
+	SendError(#[from] SendError<JsonRpcRequest>),
+	/// The oneshot channel we should have received a response through closed unexpectedly.
+	#[error("Error receiving response: {0}")]
+	RecvError(#[from] RecvError),
+	/// No response received before the timeout
+	#[error("Response not received before Timeout of {0:?}")]
+	Timeout(std::time::Duration),
+}
+
+// impl From<WsSendError> for Box<dyn std::error::Error + Send + Sync + 'static> {
+// 	fn from(err: WsSendError) -> Self {
+// 		Box::new(err)
+// 	}
+// }

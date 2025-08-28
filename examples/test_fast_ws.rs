@@ -14,7 +14,7 @@ use moonsock::{
 const DEFAULT_MOONRAKER_PORT: u16 = 7125;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 	let hostname = env::var("MOONRAKER_HOSTNAME").expect("Please add the `MOONRAKER_HOSTNAME` environment variable");
 	let port = match env::var("MOONRAKER_PORT") {
 		Ok(port_string) => match port_string.parse::<u16>() {

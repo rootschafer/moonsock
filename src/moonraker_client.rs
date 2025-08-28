@@ -1,11 +1,8 @@
-use std::{
-	error::Error as StdError,
-	time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use tokio::{
 	io::{stdin, stdout, AsyncWriteExt},
-	sync::mpsc::{self, error::SendError},
+	sync::mpsc::error::SendError,
 	time::sleep,
 };
 use tokio_util::codec::{FramedRead, LinesCodec};
@@ -13,9 +10,9 @@ use spinoff::{spinners, Color, Spinner};
 use futures_util::StreamExt;
 
 use crate::{
-	jsonrpc_ws_client::{JsonRpcRequest, JsonRpcWsClient},
+	jsonrpc_ws_client::{JsonRpcError, JsonRpcRequest, JsonRpcWsClient, WsSendError},
 	response::{MoonResultData, PrinterInfoResponse, PrinterState, ServerInfo},
-	MoonErrorContent, MoonMethod, MoonNotification, MoonParam, MoonRequest, MoonResponse, PrinterObject,
+	MoonMethod, MoonNotification, MoonParam, MoonRequest, MoonResponse, PrinterObject,
 };
 
 
@@ -38,28 +35,42 @@ pub enum PrinterSafetyStatus {
 	Shutdown,
 	TimeoutReached,
 	TooManyRestarts,
-	OtherError(Box<dyn std::error::Error>),
+	OtherError(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
-/// An error that can occur when sending a message to Moonraker.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
-pub enum MoonSendError<T> {
-	/// An error occurred while sending a message.
-	#[error("Error sending message: {0}")]
-	SendError(#[from] mpsc::error::SendError<T>),
-	/// A Moonraker error occurred.
-	#[error("Moonraker error: {0}")]
-	MoonError(MoonErrorContent),
-	/// A general error occurred.
-	#[error("Error: {0}")]
-	String(String),
-}
+// /// An error that can occur when sending a message to Moonraker.
+// #[derive(thiserror::Error, Debug, Clone, PartialEq)]
+// pub enum MoonSendError<T> {
+// 	/// An error occurred while sending a message.
+// 	#[error("Error sending message: {0}")]
+// 	SendError(#[from] mpsc::error::SendError<T>),
+// 	/// A Moonraker error occurred.
+// 	#[error("Moonraker error: {0}")]
+// 	MoonError(MoonErrorContent),
+// 	/// A general error occurred.
+// 	#[error("Error: {0}")]
+// 	String(String),
+// }
+//
+// /// Converts a `Box<dyn std::error::Error + Send + Sync + 'static>` to a `MoonSendError`.
+// impl<T> From<Box<dyn std::error::Error + Send + Sync + 'static>> for MoonSendError<T> {
+// 	fn from(err: Box<dyn std::error::Error + Send + Sync + 'static>) -> Self {
+// 		MoonSendError::String(err.to_string())
+// 	}
+// }
 
-/// Converts a `Box<dyn StdError>` to a `MoonSendError`.
-impl<T> From<Box<dyn StdError>> for MoonSendError<T> {
-	fn from(err: Box<dyn StdError>) -> Self {
-		MoonSendError::String(err.to_string())
-	}
+#[derive(thiserror::Error, Debug)]
+pub enum MoonWaitOkError {
+	#[error("WebSocket send error: {0}")]
+	WsSend(#[from] WsSendError),
+	#[error("Moon response error: {0}")]
+	// MoonResponse(#[from] MoonError), // Assuming you have a MoonError type
+	MoonResponse(#[from] JsonRpcError), // Assuming you have a MoonError type
+	// #[error("Unexpected response: {0}")]
+	// UnexpectedResponse(String),
+	#[error("Expected an `Ok` response but got: {0:?}")]
+	// NoOkResponse(MoonResponse),
+	NoOkResponse(Box<MoonResponse>),
 }
 
 /// A client for communicating with Moonraker.
@@ -74,7 +85,7 @@ impl MoonrakerClient {
 	pub async fn connect(
 		hostname: String,
 		port: Option<u16>,
-	) -> Result<MoonrakerClient, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<MoonrakerClient, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let port = port.unwrap_or(DEFAULT_MOONRAKER_PORT);
 		let url = format!("ws://{hostname}:{port}/websocket");
 		Self::connect_with_buffer_sizes(url, None, None).await
@@ -85,7 +96,7 @@ impl MoonrakerClient {
 		url: String,
 		writer_buffer_size: Option<usize>,
 		reader_buffer_size: Option<usize>,
-	) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<Self, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let connection = JsonRpcWsClient::connect(url, writer_buffer_size, reader_buffer_size).await?;
 		Ok(MoonrakerClient { connection })
 	}
@@ -101,7 +112,8 @@ impl MoonrakerClient {
 		&mut self,
 		message: MoonRequest,
 		timeout: Option<Duration>,
-	) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
+		// ) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<MoonResponse, WsSendError> {
 		let response = self
 			.connection
 			.send_with_response(message.into(), timeout)
@@ -114,29 +126,33 @@ impl MoonrakerClient {
 		&mut self,
 		message: MoonRequest,
 		timeout: Option<Duration>,
-	) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-		let res = match self
+		// ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<(), MoonWaitOkError> {
+		let res = self
 			.connection
 			.send_with_response(message.into(), timeout)
-			.await
-		{
-			Ok(res) => res.into(),
-			Err(e) => {
-				tracing::error!("Error sending message: {}", e);
-				return Err(e);
-			}
-		};
-		match res {
+			.await?;
+		// let res = match self
+		// 	.connection
+		// 	.send_with_response(message.into(), timeout)
+		// 	.await
+		// {
+		// 	Ok(res) => res.into(),
+		// 	Err(e) => {
+		// 		tracing::error!("Error sending message: {}", e);
+		// 		return Err(e.into());
+		// 	}
+		// };
+		match res.into() {
 			MoonResponse::MoonResult { result: MoonResultData::Ok(..), .. } => Ok(()),
-			// Should never be possible to get the `RES::MoonError` variant as long as the logic of `send_with_response` never changes, but
-			// for correctness reasons we should still check for it.
 			MoonResponse::MoonError { error, .. } => {
 				tracing::error!("Error: {:?}", error);
 				Err(error.into())
 			}
-			_ => {
-				tracing::error!("Expected an Ok response got: {:?}", res);
-				Err(format!("Expected an Ok response got: {res:?}").into())
+			moon_res => {
+				tracing::error!("Expected an Ok response got: {:?}", moon_res);
+				// Err(format!("Expected an Ok response got: {res:?}").into())
+				Err(MoonWaitOkError::NoOkResponse(Box::new(moon_res)))
 			}
 		}
 	}
@@ -145,7 +161,7 @@ impl MoonrakerClient {
 	/// Returns None if the underlying channel is closed.
 	pub async fn listen_for_notification(
 		&mut self,
-	) -> Option<Result<MoonNotification, Box<dyn std::error::Error + Send + Sync>>> {
+	) -> Option<Result<MoonNotification, Box<dyn std::error::Error + Send + Sync + 'static>>> {
 		self.connection
 			.listen_for_notification()
 			.await
@@ -156,7 +172,8 @@ impl MoonrakerClient {
 		&mut self,
 		username: impl Into<String>,
 		password: impl Into<String>,
-	) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
+		// ) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
+	) -> Result<MoonResponse, WsSendError> {
 		let message = MoonRequest::new(
 			MoonMethod::AccessPostUser,
 			Some(MoonParam::AccessPostUserParams {
@@ -171,7 +188,8 @@ impl MoonrakerClient {
 		&mut self,
 		username: String,
 		password: String,
-	) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync>> {
+		// ) -> Result<MoonResponse, Box<dyn std::error::Error + Send + Sync + 'static>> {
+	) -> Result<MoonResponse, WsSendError> {
 		let params = MoonParam::AccessLoginParams {
 			username,
 			password,
@@ -261,7 +279,7 @@ impl MoonrakerClient {
 	}
 
 	/// Prompts the user to restart the firmware.
-	async fn prompt_for_restart(&self) -> Result<bool, Box<dyn std::error::Error>> {
+	async fn prompt_for_restart(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let mut stdout = stdout();
 		stdout
 			.write_all(b"Do you want to attempt a firmware restart? (y/n): ")
@@ -275,19 +293,21 @@ impl MoonrakerClient {
 	}
 
 	/// Restarts the firmware.
-	async fn firmware_restart(&mut self) -> Result<(), Box<dyn StdError>> {
+	async fn firmware_restart(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let message = MoonRequest::new(MoonMethod::PrinterFirmwareRestart, None);
-		match self.send(message).await {
-			Ok(_) => Ok(()),
-			Err(e) => {
-				tracing::error!("Error sending firmware restart message: {}", e);
-				Err(e.into())
-			}
-		}
+		self.send(message).await?;
+		Ok(())
+		// match self.send(message).await {
+		// 	Ok(_) => Ok(()),
+		// 	Err(e) => {
+		// 		tracing::error!("Error sending firmware restart message: {}", e);
+		// 		Err(e.into())
+		// 	}
+		// }
 	}
 
 	/// Checks if the printer is ready.
-	pub async fn is_printer_ready(&mut self) -> Result<bool, Box<dyn StdError>> {
+	pub async fn is_printer_ready(&mut self) -> Result<bool, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let server_info = match self.get_server_info().await {
 			Ok(info) => info,
 			Err(e) => {
@@ -299,15 +319,16 @@ impl MoonrakerClient {
 	}
 
 	/// Gets the server information.
-	pub async fn get_server_info(&mut self) -> Result<ServerInfo, Box<dyn std::error::Error>> {
+	pub async fn get_server_info(&mut self) -> Result<ServerInfo, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let message = MoonRequest::new(MoonMethod::ServerInfo, None);
-		let res = match self.send_with_response(message, None).await {
-			Ok(res) => res,
-			Err(e) => {
-				tracing::error!("Error sending message: {}", e);
-				return Err(e);
-			}
-		};
+		let res = self.send_with_response(message, None).await?;
+		// let res = match self.send_with_response(message, None).await {
+		// 	Ok(res) => res,
+		// 	Err(e) => {
+		// 		tracing::error!("Error sending message: {}", e);
+		// 		return Err(e.into());
+		// 	}
+		// };
 		match res {
 			MoonResponse::MoonResult { result, .. } => match result {
 				MoonResultData::ServerInfo(server_info) => Ok(server_info),
@@ -324,15 +345,18 @@ impl MoonrakerClient {
 	}
 
 	/// Gets the printer information.
-	pub async fn get_printer_info(&mut self) -> Result<PrinterInfoResponse, Box<dyn std::error::Error>> {
+	pub async fn get_printer_info(
+		&mut self,
+	) -> Result<PrinterInfoResponse, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let message = MoonRequest::new(MoonMethod::PrinterInfo, None);
-		let res = match self.send_with_response(message, None).await {
-			Ok(res) => res,
-			Err(e) => {
-				tracing::error!("Error sending message: {}", e);
-				return Err(e);
-			}
-		};
+		let res = self.send_with_response(message, None).await?;
+		// let res = match self.send_with_response(message, None).await {
+		// 	Ok(res) => res,
+		// 	Err(e) => {
+		// 		tracing::error!("Error sending message: {}", e);
+		// 		return Err(e.into());
+		// 	}
+		// };
 		match res {
 			MoonResponse::MoonResult { result, .. } => match result {
 				MoonResultData::Ok(_) => {
@@ -350,7 +374,7 @@ impl MoonrakerClient {
 	}
 
 	/// Gets the homed axes.
-	pub async fn get_homed_axes(&mut self) -> Result<String, Box<dyn std::error::Error>> {
+	pub async fn get_homed_axes(&mut self) -> Result<String, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let param = MoonParam::PrinterObjectsQuery {
 			objects: PrinterObject::Toolhead(Some(vec!["homed_axes".to_string()])),
 		};
@@ -384,13 +408,13 @@ impl MoonrakerClient {
 			},
 			Err(e) => {
 				tracing::error!("Error sending message: {}", e);
-				Err(e)
+				Err(e.into())
 			}
 		}
 	}
 
 	/// Checks if the printer is homed.
-	pub async fn is_homed(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+	pub async fn is_homed(&mut self) -> Result<bool, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let homed_axes = match self.get_homed_axes().await {
 			Ok(homed_axes) => homed_axes,
 			Err(e) => {
@@ -404,7 +428,7 @@ impl MoonrakerClient {
 	}
 
 	/// Checks if the Z tilt is applied.
-	pub async fn is_z_tilt_applied(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+	pub async fn is_z_tilt_applied(&mut self) -> Result<bool, Box<dyn std::error::Error + Send + Sync + 'static>> {
 		let param = MoonParam::PrinterObjectsQuery { objects: PrinterObject::ZTilt(None) };
 		let msg = MoonRequest::new(MoonMethod::PrinterObjectsQuery, Some(param));
 
@@ -430,7 +454,7 @@ impl MoonrakerClient {
 			},
 			Err(e) => {
 				tracing::error!("Error sending message: {}", e);
-				Err(e)
+				Err(e.into())
 			}
 		}
 	}
