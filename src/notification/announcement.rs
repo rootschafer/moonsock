@@ -27,4 +27,3 @@ pub struct AnnouncementUpdateParam {
 pub struct EntryId {
 	pub entry_id: String,
 }
-

@@ -1,7 +1,7 @@
 // use std::collections::HashMap;
 use moonsock::{
-	ApplicationInfo, CommitInfo, GitRepoInfo, JsonRpcVersion, MoonNotification, NotificationMethod,
-	NotificationParam, SystemPkgInfo, UpdateRefreshedParam, VersionInfo, WebInfo,
+	ApplicationInfo, CommitInfo, GitRepoInfo, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
+	SystemPkgInfo, UpdateRefreshedParam, VersionInfo, WebInfo,
 };
 use maplit::hashmap;
 
@@ -276,4 +276,3 @@ fn test_parse_notify_update_refreshed() {
 	let deserialized: MoonNotification = serde_json::from_str(&serialized).unwrap();
 	assert_eq!(deserialized, expected);
 }
-

@@ -1,6 +1,4 @@
-use moonsock::{
-	ActiveSpoolSetParams, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
-};
+use moonsock::{ActiveSpoolSetParams, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam};
 
 #[test]
 fn test_serialize_notify_active_spool_set() {

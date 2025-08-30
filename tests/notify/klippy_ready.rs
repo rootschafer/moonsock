@@ -22,4 +22,3 @@ fn test_parse_notification_klippy_ready() {
 	// 	_ => panic!("Invalid response type"),
 	// }
 }
-

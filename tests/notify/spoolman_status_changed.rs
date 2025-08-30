@@ -1,6 +1,4 @@
-use moonsock::{
-	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, SpoolmanStatusChangedParams,
-};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, SpoolmanStatusChangedParams};
 
 #[test]
 fn test_serialize_notify_spoolman_status_changed() {

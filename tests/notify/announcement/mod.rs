@@ -1,3 +1,3 @@
-mod update;
 mod dismissed;
+mod update;
 mod wake;

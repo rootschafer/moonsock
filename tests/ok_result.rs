@@ -31,4 +31,3 @@ fn result_ok() {
 		_ => panic!("Wrong message type"),
 	}
 }
-

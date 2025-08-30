@@ -23,4 +23,3 @@ pub mod single_element_array {
 		Ok(params.into_iter().next().unwrap())
 	}
 }
-

@@ -2,22 +2,22 @@
 
 // #[test]
 // fn test_deserialize_server_info() {
-    // let json = r#"{
-    //     "jsonrpc": "2.0",
-    //     "result": {
-    //         "klippy_connected": true,
-    //         "klippy_state": "ready",
-    //         "components": ["database", "file_manager"],
-    //         "failed_components": [],
-    //         "registered_directories": ["config", "gcodes"],
-    //         "warnings": ["warning1", "warning2"],
-    //         "websocket_count": 2,
-    //         "moonraker_version": "v0.7.1-105-ge4f103c",
-    //         "api_version": [1, 0, 0],
-    //         "api_version_string": "1.0.0"
-    //     },
-    //     "id": 354
-    // }"#;
+// let json = r#"{
+//     "jsonrpc": "2.0",
+//     "result": {
+//         "klippy_connected": true,
+//         "klippy_state": "ready",
+//         "components": ["database", "file_manager"],
+//         "failed_components": [],
+//         "registered_directories": ["config", "gcodes"],
+//         "warnings": ["warning1", "warning2"],
+//         "websocket_count": 2,
+//         "moonraker_version": "v0.7.1-105-ge4f103c",
+//         "api_version": [1, 0, 0],
+//         "api_version_string": "1.0.0"
+//     },
+//     "id": 354
+// }"#;
 
 //     let response: MoonResponse = serde_json::from_str(json).unwrap();
 

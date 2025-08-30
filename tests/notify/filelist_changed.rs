@@ -1,7 +1,7 @@
 // use serde_json
 // use moonsock::{
-//     MoonResponse, JsonRpcVersion, 
-//     NotificationMethod, NotificationParam, 
+//     MoonResponse, JsonRpcVersion,
+//     NotificationMethod, NotificationParam,
 //     FilelistChangedParam, FilelistAction, FilelistItem,
 // };
 

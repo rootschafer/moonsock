@@ -146,4 +146,3 @@ fn test_serialize_server_info() {
 //     }
 //     assert_eq!(moon_msg.id, 2313);
 // }
-

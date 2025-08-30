@@ -1,6 +1,4 @@
-use moonsock::{
-	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, UpdateResponseParam,
-};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, UpdateResponseParam};
 
 #[test]
 fn test_parse_notify_update_response() {
@@ -36,4 +34,3 @@ fn test_parse_notify_update_response() {
 	let deserialized: MoonNotification = serde_json::from_str(&serialized).unwrap();
 	assert_eq!(deserialized, expected);
 }
-

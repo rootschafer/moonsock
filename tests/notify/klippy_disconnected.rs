@@ -30,4 +30,3 @@ fn test_serialize_notify_klippy_disconnected() {
 	let actual = serde_json::to_string(&data).unwrap();
 	assert_eq!(actual, expected);
 }
-

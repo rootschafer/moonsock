@@ -61,4 +61,3 @@ fn test_serialize_notify_service_state_changed() {
 	let actual = serde_json::to_string(&data).unwrap();
 	assert_eq!(actual, expected);
 }
-

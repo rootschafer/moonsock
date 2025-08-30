@@ -1,6 +1,5 @@
 use moonsock::{
-	JobQueueAction, JobQueueChangedParam, JsonRpcVersion, MoonNotification, NotificationMethod,
-	NotificationParam,
+	JobQueueAction, JobQueueChangedParam, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
 };
 
 // #[test]
@@ -98,4 +97,3 @@ fn test_serialize_notify_job_queue_changed() {
 	let actual = serde_json::to_string(&data).unwrap();
 	assert_eq!(actual, expected);
 }
-

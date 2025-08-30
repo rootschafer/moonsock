@@ -1,6 +1,4 @@
-use moonsock::{
-	AgentEventParams, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam,
-};
+use moonsock::{AgentEventParams, JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam};
 
 #[test]
 fn test_serialize_notify_agent_event() {
@@ -48,4 +46,3 @@ fn test_deserialize_notify_agent_event() {
 
 	assert_eq!(expected_message, actual_message);
 }
-

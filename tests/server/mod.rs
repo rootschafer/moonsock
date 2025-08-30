@@ -1,2 +1,2 @@
-mod info;
 mod config;
+mod info;

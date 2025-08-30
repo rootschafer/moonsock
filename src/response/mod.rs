@@ -15,4 +15,3 @@ pub use result_data::*;
 
 mod machine;
 pub use machine::*;
-

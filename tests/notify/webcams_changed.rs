@@ -1,6 +1,4 @@
-use moonsock::{
-	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams,
-};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, Webcam, WebcamsChangedParams};
 
 
 #[test]

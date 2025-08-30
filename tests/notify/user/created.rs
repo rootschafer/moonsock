@@ -34,4 +34,3 @@ fn test_serialize_notify_user_created() {
 	let actual = serde_json::to_string(&data).unwrap();
 	assert_eq!(actual, expected);
 }
-

@@ -208,4 +208,3 @@ pub enum MoonMethod {
 	#[serde(untagged)]
 	Other(String),
 }
-

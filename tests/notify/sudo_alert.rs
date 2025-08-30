@@ -1,6 +1,4 @@
-use moonsock::{
-	JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, SudoAlertParams,
-};
+use moonsock::{JsonRpcVersion, MoonNotification, NotificationMethod, NotificationParam, SudoAlertParams};
 
 #[test]
 fn test_serialize_notify_sudo_alert() {

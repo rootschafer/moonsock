@@ -38,4 +38,3 @@ fn test_parse_notify_cpu_throttled() {
 	let deserialized: MoonNotification = serde_json::from_str(&serialized).unwrap();
 	assert_eq!(deserialized, expected);
 }
-
