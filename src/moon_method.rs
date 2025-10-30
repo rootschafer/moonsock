@@ -48,6 +48,8 @@ pub enum MoonMethod {
 	PrinterGcodeScript,
 	#[serde(rename = "printer.gcode.help")]
 	PrinterGcodeHelp,
+	#[serde(rename = "printer.gcode.subscribe_output")]
+	PrinterGcodeSubscribeOutput,
 	#[serde(rename = "printer.print.start")]
 	PrinterPrintStart,
 	#[serde(rename = "printer.print.pause")]

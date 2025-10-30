@@ -37,6 +37,9 @@ pub enum MoonParam {
 	GcodeScript {
 		script: String,
 	},
+	GcodeSubscribeOutput {
+		response_template: serde_json::Value,
+	},
 	ServerFilesPath {
 		path: String,
 	},
