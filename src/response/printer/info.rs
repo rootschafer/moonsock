@@ -112,6 +112,7 @@ mod tests {
 		assert_eq!(response, expected);
 	}
 	#[tokio::test]
+	#[ignore = "requires a live Moonraker server"]
 	async fn printer_info_parsing() {
 		let hostname = std::env::var("MOONRAKER_HOSTNAME").unwrap_or("localhost".to_string());
 		let port = std::env::var("MOONRAKER_PORT")
